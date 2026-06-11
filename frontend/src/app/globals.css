@@ -1,0 +1,287 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font-outfit: 'Outfit', sans-serif;
+  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  --background: #040406;
+  --foreground: #f8fafc;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jakarta);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-outfit);
+}
+
+/* Elegant custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(10, 10, 15, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Liquid glass morphing blobs */
+.liquid-glass-blob {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(35px) saturate(1.4);
+  -webkit-backdrop-filter: blur(35px) saturate(1.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    inset 0 8px 32px rgba(255, 255, 255, 0.08), 
+    inset 0 -8px 32px rgba(0, 0, 0, 0.2),
+    0 15px 35px rgba(0, 0, 0, 0.3);
+  animation: morphBlob 14s ease-in-out infinite alternate, floatBlob 26s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes morphBlob {
+  0% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  }
+  34% {
+    border-radius: 70% 30% 52% 48% / 60% 40% 60% 40%;
+  }
+  67% {
+    border-radius: 50% 50% 30% 70% / 40% 60% 40% 60%;
+  }
+  100% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  }
+}
+
+@keyframes floatBlob {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) translateX(15px) rotate(180deg) scale(1.04);
+  }
+  100% {
+    transform: translateY(0px) rotate(360deg) scale(1);
+  }
+}
+
+/* Text glow effect */
+.text-glow-amber {
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.text-glow-indigo {
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Smooth range slider styling overrides */
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+}
+
+/* High-Performance Custom Cursor styles */
+@media (pointer: fine) {
+  body, a, button, [role="button"], input, select, textarea, [cursor-pointer] {
+    cursor: none !important;
+  }
+
+  .custom-cursor-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease, height 0.25s ease;
+  }
+
+  .custom-cursor-ring {
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s, background-color 0.35s;
+  }
+
+  .custom-cursor-glow {
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 70%);
+    position: fixed;
+    pointer-events: none;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Visibility activation */
+  .cursor-active .custom-cursor-dot,
+  .cursor-active .custom-cursor-ring,
+  .cursor-active .custom-cursor-glow {
+    opacity: 1;
+  }
+
+  /* Hover states (Opacity of elements/spotlight decreases and outer ring scales up) */
+  .cursor-hovering .custom-cursor-ring {
+    width: 60px;
+    height: 60px;
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.02);
+    opacity: 0.12; /* Fades out significantly to make hover clear */
+  }
+
+  .cursor-hovering .custom-cursor-dot {
+    opacity: 0; /* Center dot disappears completely on hover */
+    width: 4px;
+    height: 4px;
+  }
+
+  .cursor-hovering .custom-cursor-glow {
+    opacity: 0; /* Background spotlight disappears completely on hover */
+  }
+}
+
+/* Fanned card deck styling (Responsive: grid on mobile, fan on desktop) */
+.fanned-card-container {
+  display: grid;
+  grid-template-cols: repeat(2, 1fr);
+  gap: 1.25rem;
+  height: auto;
+  width: 100%;
+  position: relative;
+  margin-top: 3rem;
+  z-index: 10;
+}
+
+.fanned-card {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background-color: #0c0c0e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+}
+
+.fanned-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+@media (min-width: 768px) {
+  .fanned-card-container {
+    height: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .fanned-card {
+    position: absolute;
+    width: 200px;
+    height: 270px;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.5s, border-color 0.3s, box-shadow 0.3s;
+  }
+
+  /* Base states for each index in the fanned arc */
+  .fanned-card:nth-child(1) { transform: translate(-230px, 24px) rotate(-20deg); z-index: 10; }
+  .fanned-card:nth-child(2) { transform: translate(-140px, 9px) rotate(-12deg); z-index: 11; }
+  .fanned-card:nth-child(3) { transform: translate(-45px, 2px) rotate(-4deg); z-index: 12; }
+  .fanned-card:nth-child(4) { transform: translate(45px, 2px) rotate(4deg); z-index: 13; }
+  .fanned-card:nth-child(5) { transform: translate(140px, 9px) rotate(12deg); z-index: 14; }
+  .fanned-card:nth-child(6) { transform: translate(230px, 24px) rotate(20deg); z-index: 15; }
+
+  /* Group hover - spread them out and straighten them slightly */
+  .fanned-card-container:hover .fanned-card:nth-child(1) { transform: translate(-340px, 0px) rotate(-10deg); }
+  .fanned-card-container:hover .fanned-card:nth-child(2) { transform: translate(-210px, -10px) rotate(-5deg); }
+  .fanned-card-container:hover .fanned-card:nth-child(3) { transform: translate(-70px, -15px) rotate(-1deg); }
+  .fanned-card-container:hover .fanned-card:nth-child(4) { transform: translate(70px, -15px) rotate(1deg); }
+  .fanned-card-container:hover .fanned-card:nth-child(5) { transform: translate(210px, -10px) rotate(5deg); }
+  .fanned-card-container:hover .fanned-card:nth-child(6) { transform: translate(340px, 0px) rotate(10deg); }
+
+  /* Individual hover - bring card to top, scale up, light border */
+  .fanned-card:hover {
+    z-index: 50 !important;
+    transform: scale(1.15) translateY(-32px) rotate(0deg) !important;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Text readability drop-shadows for bright cinematic backgrounds */
+.text-shadow-hero {
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.85), 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.text-shadow-sub {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+
+
