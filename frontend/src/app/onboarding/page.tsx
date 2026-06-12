@@ -89,7 +89,7 @@ export default function Onboarding() {
       router.push("/login");
     } else {
       setCurrentUser(user);
-      setName(user.name);
+      setName(user.name || "");
     }
   }, [router]);
 
@@ -218,6 +218,15 @@ export default function Onboarding() {
     };
 
     try {
+      // 1. Claim username first
+      const claimRes = await apiMock.claimUsername(username);
+      if (!claimRes.success) {
+        setError(claimRes.error || "Failed to claim username.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Save complete profile details
       const res = await apiMock.updateMyProfile(profileData);
       if (res.success) {
         // Trigger completion confetti
@@ -632,7 +641,7 @@ export default function Onboarding() {
                       <span className="font-bold">{p.name}</span>
                       <span className="text-[10px] text-neutral-400">{p.techStack.join(", ")}</span>
                     </div>
-                    <button onClick={() => removeProject(p.id)} className="text-neutral-500 hover:text-white">
+                    <button onClick={() => removeProject(p.id || "")} className="text-neutral-500 hover:text-white">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -713,7 +722,7 @@ export default function Onboarding() {
                       <span className="font-bold">{c.name}</span>
                       <span className="text-[10px] text-neutral-400">{c.issuer}</span>
                     </div>
-                    <button onClick={() => removeCertification(c.id)} className="text-neutral-500 hover:text-white">
+                    <button onClick={() => removeCertification(c.id || "")} className="text-neutral-500 hover:text-white">
                       <X className="w-4 h-4" />
                     </button>
                   </div>

@@ -131,7 +131,14 @@ input[type="range"]::-moz-range-thumb {
 
 /* High-Performance Custom Cursor styles */
 @media (pointer: fine) {
-  body, a, button, [role="button"], input, select, textarea, [cursor-pointer] {
+  body.cursor-active,
+  body.cursor-active a,
+  body.cursor-active button,
+  body.cursor-active [role="button"],
+  body.cursor-active input,
+  body.cursor-active select,
+  body.cursor-active textarea,
+  body.cursor-active [cursor-pointer] {
     cursor: none !important;
   }
 
@@ -215,20 +222,34 @@ input[type="range"]::-moz-range-thumb {
 .fanned-card {
   position: relative;
   width: 100%;
-  height: 160px;
+  height: 240px;
   border-radius: 1.25rem;
   overflow: hidden;
-  background-color: #0c0c0e;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
   cursor: pointer;
 }
 
-.fanned-card:hover {
-  transform: translateY(-6px) scale(1.03);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+.features-card-container {
+  display: grid;
+  grid-template-cols: repeat(2, 1fr);
+  gap: 1.25rem;
+  height: auto;
+  width: 100%;
+  position: relative;
+  margin-top: 3rem;
+  z-index: 10;
+}
+
+.features-card {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+  cursor: pointer;
 }
 
 @media (min-width: 768px) {
@@ -246,31 +267,60 @@ input[type="range"]::-moz-range-thumb {
     height: 270px;
     border-radius: 1.5rem;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.5s, border-color 0.3s, box-shadow 0.3s;
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
   }
 
-  /* Base states for each index in the fanned arc */
-  .fanned-card:nth-child(1) { transform: translate(-230px, 24px) rotate(-20deg); z-index: 10; }
-  .fanned-card:nth-child(2) { transform: translate(-140px, 9px) rotate(-12deg); z-index: 11; }
-  .fanned-card:nth-child(3) { transform: translate(-45px, 2px) rotate(-4deg); z-index: 12; }
-  .fanned-card:nth-child(4) { transform: translate(45px, 2px) rotate(4deg); z-index: 13; }
-  .fanned-card:nth-child(5) { transform: translate(140px, 9px) rotate(12deg); z-index: 14; }
-  .fanned-card:nth-child(6) { transform: translate(230px, 24px) rotate(20deg); z-index: 15; }
+  /* Base states for each index in the fanned arc - symmetrical z-index and positions */
+  .fanned-card:nth-child(1) { --tx: -230px; --ty: 24px; --rot: -20deg; z-index: 10; }
+  .fanned-card:nth-child(2) { --tx: -140px; --ty: 9px; --rot: -12deg; z-index: 11; }
+  .fanned-card:nth-child(3) { --tx: -45px; --ty: 2px; --rot: -4deg; z-index: 12; }
+  .fanned-card:nth-child(4) { --tx: 45px; --ty: 2px; --rot: 4deg; z-index: 12; }
+  .fanned-card:nth-child(5) { --tx: 140px; --ty: 9px; --rot: 12deg; z-index: 11; }
+  .fanned-card:nth-child(6) { --tx: 230px; --ty: 24px; --rot: 20deg; z-index: 10; }
 
-  /* Group hover - spread them out and straighten them slightly */
-  .fanned-card-container:hover .fanned-card:nth-child(1) { transform: translate(-340px, 0px) rotate(-10deg); }
-  .fanned-card-container:hover .fanned-card:nth-child(2) { transform: translate(-210px, -10px) rotate(-5deg); }
-  .fanned-card-container:hover .fanned-card:nth-child(3) { transform: translate(-70px, -15px) rotate(-1deg); }
-  .fanned-card-container:hover .fanned-card:nth-child(4) { transform: translate(70px, -15px) rotate(1deg); }
-  .fanned-card-container:hover .fanned-card:nth-child(5) { transform: translate(210px, -10px) rotate(5deg); }
-  .fanned-card-container:hover .fanned-card:nth-child(6) { transform: translate(340px, 0px) rotate(10deg); }
-
-  /* Individual hover - bring card to top, scale up, light border */
+  /* Individual hover - bring card to top without moving, scaling, or straightening (no interactive displacement effect) */
   .fanned-card:hover {
     z-index: 50 !important;
-    transform: scale(1.15) translateY(-32px) rotate(0deg) !important;
-    border-color: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(255, 255, 255, 0.1);
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .features-card-container {
+    height: 480px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .features-card {
+    position: absolute;
+    width: 300px;
+    height: 405px;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+    transform: translate(var(--tx), var(--ty)) scale(var(--scale)) rotate(var(--rot, 0deg));
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+  }
+
+  /* Stacking order and positioning for 8 cards in overlapping horizontal stack */
+  .features-card:nth-child(1) { --tx: -380px; --ty: 25px; --scale: 0.76; z-index: 10; }
+  .features-card:nth-child(2) { --tx: -275px; --ty: 16px; --scale: 0.84; z-index: 11; }
+  .features-card:nth-child(3) { --tx: -170px; --ty: 8px;  --scale: 0.92; z-index: 12; }
+  .features-card:nth-child(4) { --tx: -60px;  --ty: 0px;  --scale: 1.0;  z-index: 13; }
+  .features-card:nth-child(5) { --tx: 60px;   --ty: 0px;  --scale: 1.0;  z-index: 13; }
+  .features-card:nth-child(6) { --tx: 170px;  --ty: 8px;  --scale: 0.92; z-index: 12; }
+  .features-card:nth-child(7) { --tx: 275px;  --ty: 16px; --scale: 0.84; z-index: 11; }
+  .features-card:nth-child(8) { --tx: 380px;  --ty: 25px; --scale: 0.76; z-index: 10; }
+
+  /* Hover state - bring to top and scale slightly */
+  .features-card:hover {
+    z-index: 50 !important;
+    transform: translate(var(--tx), var(--ty)) scale(1.06) rotate(calc(var(--rot, 0deg) + 360deg)) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
   }
 }
 
@@ -282,6 +332,34 @@ input[type="range"]::-moz-range-thumb {
 .text-shadow-sub {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 1px 4px rgba(0, 0, 0, 0.7);
 }
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.96; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3.5s infinite ease-in-out;
+}
+
+/* GPU Acceleration optimizations for smooth mist-reveal scroll transitions */
+#hero-section,
+#social-proof,
+#problem-section,
+#how-it-works,
+#features-section,
+#showcase-section,
+#analytics-section,
+#customization-section,
+#qr-section,
+#why-section,
+#testimonials-section,
+#pricing-section,
+#faq-section,
+#final-cta {
+  will-change: transform, opacity, filter;
+}
+
 
 
 

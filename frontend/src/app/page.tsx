@@ -9,7 +9,8 @@ import {
   Check, ArrowRight, ExternalLink, Eye, Download, MousePointer, 
   User, Sparkles, Smartphone, Monitor, MapPin, Award, Terminal, 
   FileText, Globe, ChevronDown, ChevronUp, Briefcase, HelpCircle, 
-  Layers, Share2, Shield, Heart, Zap
+  Layers, Share2, Shield, Heart, Zap, Code, GraduationCap, Palette,
+  Presentation, Rocket
 } from "lucide-react";
 
 export default function Home() {
@@ -24,6 +25,42 @@ export default function Home() {
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [showDemoNotification, setShowDemoNotification] = useState(false);
   const [activeShowcaseTab, setActiveShowcaseTab] = useState<"about" | "skills" | "projects" | "contact">("about");
+  
+  // Rotating overlapping carousel states and drag/swipe handlers
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
+  const [featureDragStartX, setFeatureDragStartX] = useState<number | null>(null);
+  const [featureRotations, setFeatureRotations] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0]);
+
+  const handleFeatureDragStart = (clientX: number) => {
+    setFeatureDragStartX(clientX);
+  };
+
+  const handleFeatureDragEnd = (clientX: number) => {
+    if (featureDragStartX === null) return;
+    const diff = featureDragStartX - clientX;
+    if (diff > 50) {
+      // Swipe left -> cycle next card (counter-clockwise spin)
+      setActiveFeatureIndex((prev) => (prev + 1) % 8);
+      setFeatureRotations((prev) => prev.map((r) => r - 360));
+    } else if (diff < -50) {
+      // Swipe right -> cycle prev card (clockwise spin)
+      setActiveFeatureIndex((prev) => (prev - 1 + 8) % 8);
+      setFeatureRotations((prev) => prev.map((r) => r + 360));
+    }
+    setFeatureDragStartX(null);
+  };
+
+  const featureSlots = [
+    { tx: -380, ty: 25, scale: 0.76, zIndex: 10 },
+    { tx: -275, ty: 16, scale: 0.84, zIndex: 11 },
+    { tx: -170, ty: 8,  scale: 0.92, zIndex: 12 },
+    { tx: -60,  ty: 0,  scale: 1.0,  zIndex: 13 },
+    { tx: 60,   ty: 0,  scale: 1.0,  zIndex: 13 },
+    { tx: 170,  ty: 8,  scale: 0.92, zIndex: 12 },
+    { tx: 275,  ty: 16, scale: 0.84, zIndex: 11 },
+    { tx: 380,  ty: 25, scale: 0.76, zIndex: 10 },
+  ];
+
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
 
   const dotRef = useRef<HTMLDivElement>(null);
@@ -181,15 +218,22 @@ export default function Home() {
 
       sections.forEach((secId) => {
         gsap.fromTo(secId, 
-          { opacity: 0, y: 35 },
+          { 
+            opacity: 0, 
+            y: 40,
+            filter: "blur(12px)",
+            scale: 0.98
+          },
           {
             opacity: 1,
             y: 0,
-            duration: 0.6,
+            filter: "blur(0px)",
+            scale: 1,
+            duration: 0.36,
             ease: "power2.out",
             scrollTrigger: {
               trigger: secId,
-              start: "top 82%",
+              start: "top 85%",
               toggleActions: "play none none none"
             }
           }
@@ -252,13 +296,16 @@ export default function Home() {
         </div>
 
         {/* Cinematic readability gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/15 to-black/65 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-black/70 pointer-events-none" />
+        
+        {/* Left-side dark radial shadow specifically under the hero text for maximum legibility */}
+        <div className="absolute top-[5%] left-[-15%] w-[70%] h-[75%] bg-black/50 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
       {/* Glassmorphic Navigation Bar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${
         isScrolled 
-          ? "bg-neutral-950/60 backdrop-blur-xl border-b border-white/5 py-3.5 shadow-lg shadow-black/25" 
+          ? "bg-black/15 backdrop-blur-xl py-3.5" 
           : "bg-gradient-to-b from-black/55 to-transparent"
       }`}>
         <div className="flex items-center gap-2">
@@ -301,18 +348,18 @@ export default function Home() {
         className="relative z-10 min-h-screen flex items-center justify-start px-6 md:px-12 lg:px-24 pt-28 pb-16 max-w-7xl mx-auto w-full"
       >
         <div className="flex flex-col items-start text-left gap-6 w-full max-w-2xl">
-          <div className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-bold text-neutral-700">
-            <span className="w-6 h-[1px] bg-neutral-700" />
+          <div className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-bold text-neutral-100 text-shadow-sub">
+            <span className="w-6 h-[1px] bg-[#dc2626]" />
             <span>One Link. Everything You Need.</span>
           </div>
-          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-tight text-neutral-950">
-            Your Entire<br />
-            Professional<br />
-            <span className="bg-gradient-to-r from-neutral-950 via-neutral-800 to-neutral-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-tight text-white">
+            <span className="text-shadow-hero">Your Entire</span><br />
+            <span className="text-shadow-hero">Professional</span><br />
+            <span className="bg-gradient-to-r from-neutral-800 via-neutral-900 to-black bg-clip-text text-transparent">
               Identity. One Link.
             </span>
           </h1>
-          <p className="text-base md:text-lg text-neutral-800 leading-relaxed font-medium">
+          <p className="text-base md:text-lg text-neutral-200 leading-relaxed font-medium text-shadow-sub">
             Stop sending resumes, LinkedIn profiles, GitHub repositories, portfolio websites, certifications, and contact information separately. 
             <br /><br />
             Create a single professional profile that contains everything recruiters, founders, hiring managers, clients, and collaborators need to evaluate you.
@@ -320,22 +367,22 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-4 mt-2 w-full">
             <Link 
               href="/register"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-neutral-950 text-white font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-neutral-950/10 active:scale-95 text-center flex items-center justify-center"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-neutral-950 font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-white/10 active:scale-95 text-center flex items-center justify-center animate-pulse-subtle"
             >
               Create My hire.me Card
             </Link>
             <a 
               href="#showcase-section"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-transparent border border-neutral-350 text-neutral-800 font-semibold text-sm hover:bg-neutral-100/50 transition-all active:scale-95 text-center"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-semibold text-sm hover:bg-white/10 transition-all active:scale-95 text-center"
             >
               View Demo Profile
             </a>
           </div>
           {/* glowing url preview */}
-          <div className="mt-4 flex items-center gap-2.5">
+          <div className="mt-4 flex items-center gap-2.5 text-shadow-sub">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-mono text-neutral-700">
-              Core link: <strong className="text-neutral-950 hover:underline cursor-pointer">hire.me/krishna</strong>
+            <span className="text-xs font-mono text-neutral-400">
+              Core link: <strong className="text-white hover:underline cursor-pointer">hire.me/alex</strong>
             </span>
           </div>
         </div>
@@ -344,7 +391,7 @@ export default function Home() {
       {/* 2. SOCIAL PROOF SECTION */}
       <section 
         id="social-proof"
-        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/20 backdrop-blur-sm border-t border-white/5"
+        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-12 text-center">
           <div className="flex flex-col gap-3 max-w-2xl mx-auto">
@@ -353,37 +400,33 @@ export default function Home() {
               Whether you're applying for jobs, networking at events, seeking freelance opportunities, or building your professional brand, hire.me helps you present yourself professionally with a single shareable link.
             </p>
           </div>
-          <div className="fanned-card-container">
+          <div className="fanned-card-container max-w-6xl mx-auto mt-12 text-left">
             {[
-              { role: "Software Developers", img: "https://images.unsplash.com/photo-1607799279861-4dd421887fb3?auto=format&fit=crop&q=80&w=300&h=400", desc: "Showcase repos & code stacks." },
-              { role: "Students", img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=300&h=400", desc: "Present projects & credentials." },
-              { role: "Designers", img: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=300&h=400", desc: "Showcase case studies & demos." },
-              { role: "Product Managers", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300&h=400", desc: "Highlight roadmaps & metrics." },
-              { role: "Freelancers", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300&h=400", desc: "Centralize clients & links." },
-              { role: "Startup Founders", img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300&h=400", desc: "Share pitch decks & background." }
+              { role: "Software Developers", desc: "Showcase github repos, tech stacks, and terminal portfolio layouts.", icon: <Code className="w-5 h-5" /> },
+              { role: "Students & Graduates", desc: "Present academic papers, projects, and internships.", icon: <GraduationCap className="w-5 h-5" /> },
+              { role: "Designers & Creatives", desc: "Display high-fidelity Figma designs and visual portfolios.", icon: <Palette className="w-5 h-5" /> },
+              { role: "Product Managers", desc: "Highlight product roadmaps, user growth, and key metrics.", icon: <Presentation className="w-5 h-5" /> },
+              { role: "Freelancers & Agencies", desc: "Centralize client testimonials, services offered, and active booking availability.", icon: <Briefcase className="w-5 h-5" /> },
+              { role: "Startup Founders", desc: "Share company pitch decks, vision, founder bio, funding history, and advisor board details.", icon: <Rocket className="w-5 h-5" /> }
             ].map((audience) => (
               <div 
                 key={audience.role}
-                className="fanned-card group/card"
+                className="fanned-card relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/20 backdrop-blur-md p-6 flex flex-col justify-between group cursor-pointer transition-all duration-500 hover:border-white/30 hover:bg-neutral-950/95 hover:shadow-2xl hover:shadow-black/60"
               >
-                {/* Background Image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={audience.img} 
-                  alt={audience.role} 
-                  className="absolute inset-0 w-full h-full object-cover opacity-50 transition-all duration-500 group-hover/card:scale-105 group-hover/card:opacity-75" 
-                />
-                
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none" />
-                
-                {/* Card Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-1.5 z-10 text-left">
-                  <div className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white shrink-0 mb-1 border border-white/10">
-                    <User className="w-3.5 h-3.5" />
+                {/* Top Row / Icon */}
+                <div className="relative z-10 flex justify-between items-start">
+                  <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-white/70 group-hover:text-[#dc2626] group-hover:border-[#dc2626]/20 group-hover:bg-[#dc2626]/5 transition-all duration-500">
+                    {audience.icon}
                   </div>
-                  <span className="text-xs font-bold leading-tight text-white">{audience.role}</span>
-                  <span className="text-[10px] text-neutral-400 font-medium leading-normal opacity-0 max-h-0 overflow-hidden group-hover/card:opacity-100 group-hover/card:max-h-12 transition-all duration-300">
+                  <div className="text-white/30 group-hover:text-[#dc2626] transition-colors duration-300">
+                    <ArrowRight className="w-4 h-4 transform -rotate-45 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                  </div>
+                </div>
+
+                {/* Bottom Content */}
+                <div className="relative z-10 flex flex-col text-left">
+                  <span className="text-lg font-bold text-white group-hover:text-[#dc2626] transition-colors duration-300 text-shadow-sub">{audience.role}</span>
+                  <span className="text-xs text-neutral-100 font-medium mt-2 line-clamp-2 leading-relaxed text-shadow-sub">
                     {audience.desc}
                   </span>
                 </div>
@@ -408,14 +451,14 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-4">
             {/* Traditional Process */}
-            <div className="p-6 md:p-8 rounded-3xl border border-rose-500/10 bg-rose-950/5 backdrop-blur-md flex flex-col gap-4">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-rose-400 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500" /> Traditional Process
+            <div className="p-6 md:p-8 rounded-3xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col gap-4">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-neutral-500" /> Traditional Process
               </h3>
-              <div className="flex flex-col gap-2 font-semibold text-xs text-neutral-300">
+              <div className="flex flex-col gap-2 font-semibold text-xs text-neutral-350">
                 {["Apply for Job", "Attach Resume PDF", "Copy LinkedIn Link", "Copy GitHub Link", "Copy Portfolio Link", "Share Contact Info", "Repeat Again"].map((step, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full border border-rose-500/10 bg-rose-950/10 flex items-center justify-center text-[10px] text-rose-400 shrink-0">{idx + 1}</span>
+                    <span className="w-6 h-6 rounded-full border border-white/5 bg-white/5 flex items-center justify-center text-[10px] text-neutral-400 shrink-0">{idx + 1}</span>
                     <span className="text-neutral-200">{step}</span>
                   </div>
                 ))}
@@ -423,15 +466,15 @@ export default function Home() {
             </div>
 
             {/* With hire.me */}
-            <div className="p-6 md:p-8 rounded-3xl border border-emerald-500/15 bg-emerald-950/5 backdrop-blur-md flex flex-col gap-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-              <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> With hire.me
+            <div className="p-6 md:p-8 rounded-3xl border border-white/15 bg-neutral-950/65 backdrop-blur-md flex flex-col gap-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> With hire.me
               </h3>
               <div className="flex flex-col gap-3 font-semibold text-xs text-neutral-300 py-4">
                 {["Create Your hire.me Card", "Share One Single Link", "Done"].map((step, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full border border-emerald-500/20 bg-emerald-950/20 flex items-center justify-center text-[10px] text-emerald-400 shrink-0">{idx + 1}</span>
+                    <span className="w-6 h-6 rounded-full border border-white/10 bg-white/10 flex items-center justify-center text-[10px] text-neutral-200 shrink-0">{idx + 1}</span>
                     <span className="text-neutral-100 text-sm font-bold">{step}</span>
                   </div>
                 ))}
@@ -447,7 +490,7 @@ export default function Home() {
       {/* 4. HOW IT WORKS SECTION */}
       <section 
         id="how-it-works"
-        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/20 backdrop-blur-sm border-t border-white/5"
+        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-14">
           <div className="flex flex-col gap-3 text-center max-w-2xl mx-auto">
@@ -464,7 +507,7 @@ export default function Home() {
             ].map((step, idx) => (
               <div 
                 key={idx}
-                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/45 hover:border-white/10 transition-all flex flex-col gap-3 text-left"
+                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/65 backdrop-blur-md hover:border-white/10 transition-all flex flex-col gap-3 text-left"
               >
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 font-mono">{step.s}</span>
                 <h3 className="text-base font-bold text-white mt-1">{step.t}</h3>
@@ -486,7 +529,19 @@ export default function Home() {
             <p className="text-sm text-neutral-350">One digital profile to showcase your entire credentials stack.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div 
+            className="features-card-container relative max-w-6xl mx-auto mt-12 text-left grid grid-cols-1 sm:grid-cols-2 md:block select-none cursor-grab active:cursor-grabbing"
+            onTouchStart={(e) => handleFeatureDragStart(e.touches[0].clientX)}
+            onTouchEnd={(e) => handleFeatureDragEnd(e.changedTouches[0].clientX)}
+            onMouseDown={(e) => handleFeatureDragStart(e.clientX)}
+            onMouseUp={(e) => handleFeatureDragEnd(e.clientX)}
+            onMouseLeave={(e) => {
+              if (featureDragStartX !== null) handleFeatureDragEnd(e.clientX);
+            }}
+          >
+            {/* Background Red Glow behind cards (Desktop only) */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-64 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.22)_0%,transparent_60%)] pointer-events-none z-0 blur-2xl hidden md:block" />
+
             {[
               { icon: <User className="w-5 h-5" />, title: "Professional Profile", desc: "Beautiful public profile layouts designed to present your professional identity." },
               { icon: <FileText className="w-5 h-5" />, title: "Resume Hosting", desc: "Always serve the latest version of your resume PDF from one permanent link." },
@@ -496,20 +551,42 @@ export default function Home() {
               { icon: <Globe className="w-5 h-5" />, title: "Professional Links", desc: "Integrate LinkedIn, GitHub, LeetCode, Medium, Dev.to, and Hashnode." },
               { icon: <Share2 className="w-5 h-5" />, title: "Contact Hub", desc: "Allow recruiters to download contact cards or email you instantly." },
               { icon: <Smartphone className="w-5 h-5" />, title: "Mobile Optimized", desc: "Completely responsive layout looking stunning on every size." }
-            ].map((feat, idx) => (
-              <div 
-                key={idx}
-                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/35 hover:border-white/10 transition-all flex flex-col gap-4 text-left"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-neutral-305">
-                  {feat.icon}
+            ].map((feat, idx) => {
+              const slotIdx = (idx - activeFeatureIndex + 8) % 8;
+              const slot = featureSlots[slotIdx];
+
+              return (
+                <div 
+                  key={idx}
+                  className="features-card relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/20 backdrop-blur-md p-6 flex flex-col justify-between group cursor-pointer transition-all duration-500 hover:border-white/30 hover:bg-neutral-950/95 hover:shadow-2xl hover:shadow-black/60"
+                  style={{
+                    '--tx': `${slot.tx}px`,
+                    '--ty': `${slot.ty}px`,
+                    '--scale': slot.scale,
+                    '--rot': `${featureRotations[idx]}deg`,
+                    zIndex: slot.zIndex,
+                  } as React.CSSProperties}
+                >
+                  {/* Top Row / Icon */}
+                  <div className="relative z-10 flex justify-between items-start">
+                    <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-white/70 group-hover:text-[#dc2626] group-hover:border-[#dc2626]/20 group-hover:bg-[#dc2626]/5 transition-all duration-500">
+                      {feat.icon}
+                    </div>
+                    <div className="text-white/30 group-hover:text-[#dc2626] transition-colors duration-300">
+                      <ArrowRight className="w-4 h-4 transform -rotate-45 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                    </div>
+                  </div>
+
+                  {/* Bottom Content */}
+                  <div className="relative z-10 flex flex-col text-left">
+                    <span className="text-sm font-bold text-white group-hover:text-[#dc2626] transition-colors duration-300 text-shadow-sub">{feat.title}</span>
+                    <span className="text-xs text-neutral-100 font-medium mt-2 line-clamp-2 leading-relaxed text-shadow-sub">
+                      {feat.desc}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <h4 className="text-sm font-bold text-white">{feat.title}</h4>
-                  <p className="text-xs text-neutral-300 leading-relaxed mt-1">{feat.desc}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -517,7 +594,7 @@ export default function Home() {
       {/* 6. PROFILE SHOWCASE */}
       <section 
         id="showcase-section"
-        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/20 backdrop-blur-sm border-t border-white/5"
+        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
       >
         <div className="max-w-4xl mx-auto flex flex-col gap-12 text-center">
           <div className="flex flex-col gap-3 max-w-xl mx-auto">
@@ -529,7 +606,7 @@ export default function Home() {
           <div className="w-full rounded-3xl border border-white/10 bg-neutral-950/75 backdrop-blur-2xl shadow-2xl overflow-hidden text-left flex flex-col">
             {/* Header bar */}
             <div className="p-4 bg-neutral-900/40 border-b border-white/5 flex items-center justify-between">
-              <span className="text-xs font-bold text-neutral-300">hire.me/krishna</span>
+              <span className="text-xs font-bold text-neutral-300">hire.me/alex</span>
               <div className="flex items-center gap-2">
                 {["about", "skills", "projects", "contact"].map((tab) => (
                   <button
@@ -556,7 +633,7 @@ export default function Home() {
                       <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150&h=150" alt="avatar" className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-white">Krishna Gopal</h4>
+                      <h4 className="text-lg font-bold text-white">Alex Rivera</h4>
                       <p className="text-xs text-neutral-300">Senior Full Stack Architect @ San Francisco, CA</p>
                     </div>
                   </div>
@@ -608,7 +685,7 @@ export default function Home() {
               {activeShowcaseTab === "contact" && (
                 <div className="flex flex-col gap-4">
                   <h4 className="text-xs uppercase font-extrabold tracking-widest text-neutral-300 font-mono">Download Profile Info</h4>
-                  <p className="text-xs text-neutral-300">Save Krishna's contact details directly to your mobile address book.</p>
+                  <p className="text-xs text-neutral-300">Save Alex's contact details directly to your mobile address book.</p>
                   <div className="flex gap-3 mt-2">
                     <button className="h-10 px-6 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-100 active:scale-95 transition-all flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" /> Save Contact Card (.vcf)
@@ -644,7 +721,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Stats Grid */}
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/45 flex flex-col gap-2">
+              <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[9px] uppercase font-bold tracking-widest text-neutral-400">
                   <span>Profile Views</span>
                   <Eye className="w-4 h-4 text-neutral-300" />
@@ -652,7 +729,7 @@ export default function Home() {
                 <span className="text-4xl font-extrabold text-white">1,492</span>
                 <span className="text-[10px] text-emerald-400 font-semibold">+18% this week</span>
               </div>
-              <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/45 flex flex-col gap-2">
+              <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[9px] uppercase font-bold tracking-widest text-neutral-400">
                   <span>Resume Downloads</span>
                   <Download className="w-4 h-4 text-neutral-300" />
@@ -660,7 +737,7 @@ export default function Home() {
                 <span className="text-4xl font-extrabold text-white">418</span>
                 <span className="text-[10px] text-emerald-400 font-semibold">+12% this week</span>
               </div>
-              <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/45 flex flex-col gap-2">
+              <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[9px] uppercase font-bold tracking-widest text-neutral-400">
                   <span>Link Clicks</span>
                   <MousePointer className="w-4 h-4 text-neutral-300" />
@@ -671,7 +748,7 @@ export default function Home() {
             </div>
 
             {/* Right: Device insights */}
-            <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/45 flex flex-col gap-4">
+            <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col gap-4">
               <h4 className="text-xs uppercase font-extrabold tracking-widest text-neutral-300">Traffic Breakdown</h4>
               <div className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1">
@@ -710,7 +787,7 @@ export default function Home() {
       {/* 8. CUSTOMIZATION & THEME SELECTION */}
       <section 
         id="customization"
-        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/20 backdrop-blur-sm border-t border-white/5"
+        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
       >
         <div id="customization-section" className="max-w-6xl mx-auto flex flex-col gap-14">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -742,21 +819,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 mt-2">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-300">Brand Color Accent</span>
-                  <div className="flex items-center gap-3">
-                    {["#3b82f6", "#10b981", "#6366f1", "#f43f5e", "#ffffff"].map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setCustomizerColor(color)}
-                        className="w-7 h-7 rounded-full border border-white/15 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-                        style={{ backgroundColor: color }}
-                      >
-                        {customizerColor === color && <Check className="w-3.5 h-3.5 text-neutral-950 font-bold" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
               </div>
             </div>
 
@@ -774,12 +837,12 @@ export default function Home() {
                         <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150&h=150" alt="avatar" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">Krishna Gopal</span>
+                        <span className="text-sm font-bold text-white">Alex Rivera</span>
                         <span className="text-[10px] font-semibold" style={{ color: customizerColor }}>{themeDetails.modern.name}</span>
                       </div>
                     </div>
                     <p className="text-xs text-neutral-300 leading-normal">{themeDetails.modern.desc}</p>
-                    <button className="h-9 rounded-lg text-xs font-bold text-neutral-950 active:scale-95 transition-all flex items-center justify-center gap-1.5" style={{ backgroundColor: customizerColor }}>
+                    <button className="h-9 rounded-lg text-xs font-bold bg-white text-neutral-950 active:scale-95 transition-all flex items-center justify-center gap-1.5 hover:bg-neutral-100">
                       <FileText className="w-3.5 h-3.5" /> Download Resume
                     </button>
                   </div>
@@ -787,7 +850,7 @@ export default function Home() {
 
                 {customizerTheme === "minimal" && (
                   <div className="flex flex-col gap-3 font-serif">
-                    <h4 className="text-2xl font-light text-neutral-900 bg-white px-2 py-0.5 self-start rounded">Krishna Gopal</h4>
+                    <h4 className="text-2xl font-light text-neutral-900 bg-white px-2 py-0.5 self-start rounded">Alex Rivera</h4>
                     <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest" style={{ color: customizerColor }}>{themeDetails.minimal.name}</span>
                     <p className="text-xs text-neutral-300 leading-normal font-sans">{themeDetails.minimal.desc}</p>
                     <button className="h-9 rounded border border-neutral-200 text-xs font-bold font-sans hover:bg-neutral-900 hover:text-white transition-all">
@@ -845,7 +908,7 @@ export default function Home() {
             <p className="text-sm text-neutral-300">Scan codes and exchange details instantly at meetups, events, or on printouts.</p>
           </div>
 
-          <div className="p-6 rounded-3xl border border-white/5 bg-neutral-950/45 max-w-md flex flex-col items-center gap-5">
+          <div className="p-6 rounded-3xl border border-white/5 bg-neutral-950/65 backdrop-blur-md max-w-md flex flex-col items-center gap-5">
             <div className="p-4 rounded-2xl bg-white flex items-center justify-center border shadow-xl">
               {/* Simulated QR Code Layout */}
               <div className="w-36 h-36 border border-neutral-200 bg-neutral-150 flex items-center justify-center rounded">
@@ -855,7 +918,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-col gap-1 max-w-xs">
-              <span className="text-xs font-bold text-white">Scan to Load hire.me/krishna</span>
+              <span className="text-xs font-bold text-white">Scan to Load hire.me/alex</span>
               <p className="text-[11px] text-neutral-300 leading-normal">
                 Visitors can simply scan your physical QR code to gain access to your resume PDF, credentials portfolio, and socials.
               </p>
@@ -867,7 +930,7 @@ export default function Home() {
       {/* 10. WHY HIRE.ME SECTION */}
       <section 
         id="why-section"
-        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/20 backdrop-blur-sm border-t border-white/5"
+        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-14">
           <div className="flex flex-col gap-3 text-center max-w-2xl mx-auto">
@@ -883,7 +946,7 @@ export default function Home() {
             ].map((item, idx) => (
               <div 
                 key={idx}
-                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/35 flex flex-col gap-3 text-left"
+                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/20 backdrop-blur-md hover:bg-neutral-950/30 hover:border-white/10 transition-all duration-300 flex flex-col gap-3 text-left"
               >
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-neutral-300">
                   <Shield className="w-4 h-4" />
@@ -909,13 +972,13 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
             {[
-              { n: "Krishna Gopal", r: "Software Architect", f: "Using hire.me simplified my applications. I just paste my single link and recruiters get my code, resume, and contact card instantly." },
+              { n: "Alex Rivera", r: "Software Architect", f: "Using hire.me simplified my applications. I just paste my single link and recruiters get my code, resume, and contact card instantly." },
               { n: "Sarah Chen", r: "UX Designer", f: "I love the minimal template theme! It lets my project showcase and case studies take center stage without clutter." },
               { n: "David Park", r: "Startup Founder", f: "Whenever developers apply with their hire.me card, I evaluate their entire profile in 30 seconds. It's a lifesaver for recruiters." }
             ].map((t, idx) => (
               <div 
                 key={idx}
-                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/45 flex flex-col justify-between gap-6"
+                className="p-6 rounded-3xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col justify-between gap-6"
               >
                 <p className="text-xs text-neutral-300 leading-relaxed italic">"{t.f}"</p>
                 <div className="flex items-center gap-3">
@@ -936,7 +999,7 @@ export default function Home() {
       {/* 12. PRICING SECTION */}
       <section 
         id="pricing"
-        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/20 backdrop-blur-sm border-t border-white/5"
+        className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
       >
         <div id="pricing-section" className="max-w-4xl mx-auto flex flex-col gap-14 text-center">
           <div className="flex flex-col gap-3 max-w-xl mx-auto">
@@ -946,7 +1009,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left items-stretch max-w-2xl mx-auto w-full">
             {/* Free Plan */}
-            <div className="p-6 md:p-8 rounded-3xl border border-white/5 bg-neutral-950/45 flex flex-col justify-between gap-8">
+            <div className="p-6 md:p-8 rounded-3xl border border-white/5 bg-neutral-950/65 backdrop-blur-md flex flex-col justify-between gap-8">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-white">Free Plan</span>
@@ -968,7 +1031,7 @@ export default function Home() {
             </div>
 
             {/* Pro Plan */}
-            <div className="p-6 md:p-8 rounded-3xl border border-white/15 bg-neutral-950/65 relative overflow-hidden flex flex-col justify-between gap-8 border-glow-neutral shadow-xl">
+            <div className="p-6 md:p-8 rounded-3xl border border-white/15 bg-neutral-950/65 backdrop-blur-md relative overflow-hidden flex flex-col justify-between gap-8 border-glow-neutral shadow-xl">
               <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded-full text-[9px] uppercase font-mono tracking-widest text-neutral-300">
                 Recommended
               </div>
@@ -1010,7 +1073,7 @@ export default function Home() {
             {faqs.map((faq, idx) => (
               <div 
                 key={idx}
-                className="p-4.5 rounded-2xl border border-white/5 bg-neutral-950/45 cursor-pointer transition-all hover:border-white/10"
+                className="p-4.5 rounded-2xl border border-white/5 bg-neutral-950/65 backdrop-blur-md cursor-pointer transition-all hover:border-white/10"
                 onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
               >
                 <div className="flex items-center justify-between gap-4">

@@ -28,7 +28,7 @@ export default function PublicProfile({ params }: PageProps) {
           setProfile(data);
           
           // Record view event in analytics
-          await apiMock.recordEvent(username, "view");
+          await apiMock.recordEvent(username, "profile_view");
         }
       } catch (err) {
         console.error("Failed to load profile", err);
@@ -43,7 +43,12 @@ export default function PublicProfile({ params }: PageProps) {
   // Analytics Event Trackers
   const handleSocialClick = (platform: string) => {
     if (!profile) return;
-    apiMock.recordEvent(profile.username, "link_click", platform);
+    const eventType = platform === "github" 
+      ? "github_click" 
+      : platform === "linkedin" 
+        ? "linkedin_click" 
+        : "contact_click";
+    apiMock.recordEvent(profile.username, eventType as any, platform);
   };
 
   const handleDownloadResume = () => {
@@ -54,7 +59,13 @@ export default function PublicProfile({ params }: PageProps) {
 
   const handleSaveContact = () => {
     if (!profile) return;
+    apiMock.recordEvent(profile.username, "contact_click");
     triggerVCardDownload(profile);
+  };
+
+  const handleVideoPlay = (projectName: string) => {
+    if (!profile) return;
+    apiMock.recordEvent(profile.username, "demo_video_play", projectName);
   };
 
   if (loading) {
@@ -119,6 +130,7 @@ export default function PublicProfile({ params }: PageProps) {
       onSocialClick={handleSocialClick}
       onDownloadResume={handleDownloadResume}
       onSaveContact={handleSaveContact}
+      onVideoPlay={handleVideoPlay}
     />
   );
 }
