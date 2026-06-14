@@ -172,6 +172,7 @@ const updateMyProfile = async (req, res) => {
       experiences,
       educations,
       certifications,
+      tier,
     } = req.body;
 
     // Update Profile Fields
@@ -188,6 +189,7 @@ const updateMyProfile = async (req, res) => {
     if (bannerUrl !== undefined) profile.bannerUrl = bannerUrl;
     if (resumeUrl !== undefined) profile.resumeUrl = resumeUrl;
     if (resumeFileName !== undefined) profile.resumeFileName = resumeFileName;
+    if (tier !== undefined) profile.tier = tier;
 
     await profile.save();
 
@@ -226,6 +228,7 @@ const updateMyProfile = async (req, res) => {
           liveUrl: p.liveUrl,
           demoVideoUrl: p.demoVideoUrl,
           thumbnailUrl: p.thumbnailUrl,
+          screenshots: p.screenshots || [],
           isFeatured: p.isFeatured || false,
         }));
         await Project.insertMany(projectsToInsert);

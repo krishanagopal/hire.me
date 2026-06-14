@@ -59,6 +59,11 @@ const profileSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    tier: {
+      type: String,
+      enum: ["free", "pro"],
+      default: "free",
+    },
   },
   {
     timestamps: true,

@@ -2,15 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { apiMock, Skill, Project, Certification, Profile } from "../../utils/apiMock";
+import { apiMock, Profile } from "../../utils/apiMock";
 import { 
-  User, Link as LinkIcon, FileText, Briefcase, Award, CheckCircle, 
-  ArrowRight, ArrowLeft, Upload, Plus, X, Globe, Phone, MapPin
+  User, Link as LinkIcon, FileText, Globe, CheckCircle, 
+  ArrowRight, ArrowLeft, Upload, X, Play, Image as ImageIcon, Trash2
 } from "lucide-react";
 
-// Inline brand icon SVGs to prevent lucide deprecation errors
+// Inline brand icon SVGs
 const Github = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 shrink-0" {...props}>
     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -29,7 +28,6 @@ const Twitter = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-
 export default function Onboarding() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -40,47 +38,54 @@ export default function Onboarding() {
   // Step 1: Basic Info
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
-  const [location, setLocation] = useState("");
-  const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [bannerUrl, setBannerUrl] = useState("");
 
-  // Step 2: Professional Links
-  const [linkedin, setLinkedin] = useState("");
-  const [github, setGithub] = useState("");
-  const [portfolio, setPortfolio] = useState("");
-  const [twitter, setTwitter] = useState("");
-  const [leetcode, setLeetcode] = useState("");
+  // Step 2: Project Details (Single main project showcase)
+  const [projName, setProjName] = useState("");
+  const [projDesc, setProjDesc] = useState("");
+  const [projStack, setProjStack] = useState("");
+  const [projVideoUrl, setProjVideoUrl] = useState("");
+  const [projGit, setProjGit] = useState("");
+  const [projLive, setProjLive] = useState("");
 
   // Step 3: Resume
   const [resumeFileName, setResumeFileName] = useState("");
   const [resumeUrl, setResumeUrl] = useState("");
 
-  // Step 4: Skills
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [newSkillName, setNewSkillName] = useState("");
-  const [newSkillCategory, setNewSkillCategory] = useState<Skill["category"]>("Frontend");
+  // Step 4: Social Links
+  const [linkedin, setLinkedin] = useState("");
+  const [github, setGithub] = useState("");
+  const [twitter, setTwitter] = useState("");
 
-  // Step 5: Projects
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projName, setProjName] = useState("");
-  const [projDesc, setProjDesc] = useState("");
-  const [projStack, setProjStack] = useState("");
-  const [projGit, setProjGit] = useState("");
-  const [projLive, setProjLive] = useState("");
-  const [projThumb, setProjThumb] = useState("");
-
-  // Step 6: Certifications
-  const [certifications, setCertifications] = useState<Certification[]>([]);
-  const [certName, setCertName] = useState("");
-  const [certIssuer, setCertIssuer] = useState("");
-  const [certDate, setCertDate] = useState("");
-  const [certUrl, setCertUrl] = useState("");
-
-  // Step 7: Username selection
+  // Step 5: Username selection
   const [username, setUsername] = useState("");
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+
+  // Screenshots state
+  const [screenshots, setScreenshots] = useState<string[]>([]);
+
+  // Screenshot upload handlers
+  const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (screenshots.length >= 4) {
+      setError("Free tier limit: Maximum of 4 screenshots allowed.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setScreenshots([...screenshots, base64]);
+      setError("");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteScreenshot = (idx: number) => {
+    setScreenshots(screenshots.filter((_: string, i: number) => i !== idx));
+  };
 
   // Authenticate user on mount
   useEffect(() => {
@@ -90,6 +95,10 @@ export default function Onboarding() {
     } else {
       setCurrentUser(user);
       setName(user.name || "");
+      // Pre-fill GitHub if username exists
+      if (user.username) {
+        setUsername(user.username);
+      }
     }
   }, [router]);
 
@@ -107,80 +116,18 @@ export default function Onboarding() {
     return () => clearTimeout(timer);
   }, [username]);
 
-  // Convert files to base64 for local storage storage
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "avatar" | "banner" | "resume") => {
+  // Convert files to base64
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
-      if (type === "avatar") setAvatarUrl(base64);
-      else if (type === "banner") setBannerUrl(base64);
-      else if (type === "resume") {
-        setResumeUrl(base64);
-        setResumeFileName(file.name);
-      }
+      setResumeUrl(base64);
+      setResumeFileName(file.name);
     };
     reader.readAsDataURL(file);
-  };
-
-  // Skill Add/Remove
-  const addSkill = () => {
-    if (!newSkillName.trim()) return;
-    if (skills.some(s => s.name.toLowerCase() === newSkillName.trim().toLowerCase())) return;
-    setSkills([...skills, { name: newSkillName.trim(), category: newSkillCategory }]);
-    setNewSkillName("");
-  };
-
-  const removeSkill = (index: number) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
-
-  // Project Add/Remove
-  const addProject = () => {
-    if (!projName.trim() || !projDesc.trim()) return;
-    const newProj: Project = {
-      id: `proj_${Date.now()}`,
-      name: projName.trim(),
-      description: projDesc.trim(),
-      techStack: projStack.split(",").map(t => t.trim()).filter(Boolean),
-      githubUrl: projGit.trim() || undefined,
-      liveUrl: projLive.trim() || undefined,
-      thumbnailUrl: projThumb.trim() || "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=300&h=180",
-    };
-    setProjects([...projects, newProj]);
-    setProjName("");
-    setProjDesc("");
-    setProjStack("");
-    setProjGit("");
-    setProjLive("");
-    setProjThumb("");
-  };
-
-  const removeProject = (id: string) => {
-    setProjects(projects.filter(p => p.id !== id));
-  };
-
-  // Certification Add/Remove
-  const addCertification = () => {
-    if (!certName.trim() || !certIssuer.trim()) return;
-    const newCert: Certification = {
-      id: `cert_${Date.now()}`,
-      name: certName.trim(),
-      issuer: certIssuer.trim(),
-      issueDate: certDate.trim() || "N/A",
-      credentialUrl: certUrl.trim() || undefined,
-    };
-    setCertifications([...certifications, newCert]);
-    setCertName("");
-    setCertIssuer("");
-    setCertDate("");
-    setCertUrl("");
-  };
-
-  const removeCertification = (id: string) => {
-    setCertifications(certifications.filter(c => c.id !== id));
   };
 
   // Form Submit (Complete Onboarding)
@@ -192,29 +139,39 @@ export default function Onboarding() {
     setLoading(true);
     setError("");
 
+    // Build the primary project showcase object
+    const projectsList = projName ? [
+      {
+        name: projName,
+        description: projDesc,
+        techStack: projStack ? projStack.split(",").map(t => t.trim()).filter(Boolean) : [],
+        githubUrl: projGit || undefined,
+        liveUrl: projLive || undefined,
+        demoVideoUrl: projVideoUrl || undefined,
+        screenshots: screenshots || [],
+        isFeatured: true
+      }
+    ] : [];
+
     const profileData: Partial<Profile> = {
       username,
-      name,
-      headline: headline || "Professional",
-      location: location || "Remote",
-      phone,
-      bio: bio || "Professional profile card.",
-      avatarUrl: avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150&h=150",
-      bannerUrl: bannerUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=1200&h=300",
+      fullName: name,
+      headline: headline || "Software Developer",
+      bio: bio || "Developer Showcase",
       theme: "modern",
-      accentColor: "#3b82f6", // Default blue
+      accentColor: "#3b82f6", // default blue accent
       socialLinks: {
         linkedin: linkedin || undefined,
         github: github || undefined,
-        portfolio: portfolio || undefined,
         twitter: twitter || undefined,
-        leetcode: leetcode || undefined,
       },
-      skills,
-      projects,
-      certifications,
+      projects: projectsList,
       resumeUrl: resumeUrl || undefined,
       resumeFileName: resumeFileName || undefined,
+      skills: [],
+      experiences: [],
+      educations: [],
+      certifications: [],
     };
 
     try {
@@ -229,7 +186,6 @@ export default function Onboarding() {
       // 2. Save complete profile details
       const res = await apiMock.updateMyProfile(profileData);
       if (res.success) {
-        // Trigger completion confetti
         confetti({
           particleCount: 150,
           spread: 80,
@@ -249,38 +205,35 @@ export default function Onboarding() {
     }
   };
 
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 7));
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
-
-  // Motion variants for slide animations
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      transition: { duration: 0.3, ease: "easeOut" }
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 300 : -300,
-      opacity: 0,
-      transition: { duration: 0.2, ease: "easeIn" }
-    })
+  const nextStep = () => {
+    // Basic step validation
+    if (step === 1 && !name.trim()) {
+      setError("Name is required");
+      return;
+    }
+    if (step === 2 && !projName.trim()) {
+      setError("Project Name is required");
+      return;
+    }
+    if (step === 2 && !projVideoUrl.trim()) {
+      setError("Project Demo Video URL is required");
+      return;
+    }
+    setError("");
+    setStep(prev => Math.min(prev + 1, 5));
   };
-
-  const getStepDirection = (currStep: number) => {
-    // Basic direction tracker (always forward for now)
-    return 1;
+  
+  const prevStep = () => {
+    setError("");
+    setStep(prev => Math.max(prev - 1, 1));
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#030304] text-white px-4 py-24 select-none">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#030304] text-white px-4 py-20 select-none">
       
       {/* Background glow effects */}
-      <div className="absolute top-[10%] left-[10%] w-[350px] h-[350px] rounded-full bg-neutral-500/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[10%] w-[450px] h-[450px] rounded-full bg-neutral-600/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[10%] left-[10%] w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[10%] w-[450px] h-[450px] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
 
       {/* Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-neutral-950/20 backdrop-blur-md border-b border-white/5">
@@ -288,20 +241,20 @@ export default function Onboarding() {
           hire.me
         </span>
         <span className="text-xs text-neutral-400 font-semibold">
-          Onboarding Setup
+          Setup Showcase Link
         </span>
       </header>
 
       {/* Progress Tracker Wrapper */}
-      <div className="w-full max-w-xl mb-8">
+      <div className="w-full max-w-xl mb-8 mt-8">
         <div className="flex justify-between items-center text-xs text-neutral-400 font-bold uppercase tracking-wider mb-2">
-          <span>Progress</span>
-          <span>Step {step} of 7</span>
+          <span>Showcase Progress</span>
+          <span>Step {step} of 5</span>
         </div>
         <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-white via-neutral-300 to-neutral-600 transition-all duration-300 ease-out"
-            style={{ width: `${(step / 7) * 100}%` }}
+            className="h-full bg-blue-500 transition-all duration-300 ease-out"
+            style={{ width: `${(step / 5) * 100}%` }}
           />
         </div>
       </div>
@@ -309,159 +262,184 @@ export default function Onboarding() {
       {/* Wizard Form Frame */}
       <div className="w-full max-w-xl min-h-[460px] p-6 md:p-8 rounded-3xl border border-white/5 bg-neutral-950/45 backdrop-blur-xl shadow-2xl flex flex-col justify-between">
         
-        {/* Step-by-step forms */}
-        <div className="flex-1 mb-8 overflow-hidden">
+        {/* Step Content */}
+        <div className="flex-grow mb-8">
+          {error && (
+            <div className="mb-4 text-xs text-rose-400 p-3 bg-rose-950/15 border border-rose-500/10 rounded-xl">
+              {error}
+            </div>
+          )}
+
+          {/* STEP 1: BASIC INFO */}
           {step === 1 && (
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-bold flex items-center gap-2">
-                  <User className="w-5 h-5 text-amber-400" /> Basic Information
+                  <User className="w-5 h-5 text-blue-400" /> Basic Details
                 </h3>
-                <p className="text-xs text-neutral-400">Introduce yourself to hiring managers and recruiters.</p>
+                <p className="text-xs text-neutral-400">Introduce yourself to hiring managers and recruiters visiting your link.</p>
               </div>
 
-              {/* Photo Uploads */}
-              <div className="flex gap-4 items-center p-3 rounded-2xl bg-white/5 border border-white/5">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border border-white/10 shrink-0 bg-neutral-900 flex items-center justify-center">
-                  {avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-6 h-6 text-neutral-600" />
-                  )}
-                  <label className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                    <Upload className="w-4 h-4 text-white" />
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "avatar")} />
-                  </label>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold">Profile Photo</span>
-                  <span className="text-[10px] text-neutral-400">Upload a professional headshot.</span>
-                </div>
-              </div>
-
-              {/* Form Inputs */}
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Full Name</label>
                   <input
                     type="text"
+                    placeholder="Enter your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                    required
                   />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Headline</label>
                   <input
                     type="text"
-                    placeholder="MERN Stack Developer | React Architect"
+                    placeholder="MERN Stack Developer | React Native Architect"
                     value={headline}
                     onChange={(e) => setHeadline(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Location</label>
-                    <input
-                      type="text"
-                      placeholder="Boston, MA"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Phone</label>
-                    <input
-                      type="text"
-                      placeholder="+1 (555) 123-4567"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Short Bio</label>
                   <textarea
-                    rows={3}
-                    placeholder="Write a concise professional summary about your career goals and core stack..."
+                    rows={4}
+                    placeholder="Write a brief professional summary about yourself..."
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="p-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50 resize-none"
+                    className="p-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50 resize-none"
                   />
                 </div>
               </div>
             </div>
           )}
 
+          {/* STEP 2: PROJECT SHOWREEL */}
           {step === 2 && (
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-bold flex items-center gap-2">
-                  <LinkIcon className="w-5 h-5 text-orange-400" /> Professional Links
+                  <Play className="w-5 h-5 text-blue-400" /> Project Showreel Video
                 </h3>
-                <p className="text-xs text-neutral-400">Link your profiles so recruiters can verify your codebase and history.</p>
+                <p className="text-xs text-neutral-400">Feature a demo video of your project at the center of your page.</p>
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5"><Linkedin className="w-3.5 h-3.5 text-blue-400" /> LinkedIn URL</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Project Name</label>
                   <input
-                    type="url"
-                    placeholder="https://linkedin.com/in/username"
-                    value={linkedin}
-                    onChange={(e) => setLinkedin(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
+                    type="text"
+                    placeholder="E.g., DevConnector Social Network"
+                    value={projName}
+                    onChange={(e) => setProjName(e.target.value)}
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                    required
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5"><Github className="w-3.5 h-3.5 text-neutral-300" /> GitHub URL</label>
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Demo Video URL</label>
                   <input
                     type="url"
-                    placeholder="https://github.com/username"
-                    value={github}
-                    onChange={(e) => setGithub(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
+                    placeholder="E.g., https://www.youtube.com/watch?v=... or direct MP4 link"
+                    value={projVideoUrl}
+                    onChange={(e) => setProjVideoUrl(e.target.value)}
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                    required
+                  />
+                  <span className="text-[10px] text-neutral-500">Supports YouTube watch links, embeds, or direct video file links.</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">GitHub Repository URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://github.com/..."
+                      value={projGit}
+                      onChange={(e) => setProjGit(e.target.value)}
+                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Live Site URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://mysite.com"
+                      value={projLive}
+                      onChange={(e) => setProjLive(e.target.value)}
+                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Tech Stack (comma-separated)</label>
+                  <input
+                    type="text"
+                    placeholder="React, Express, TailwindCSS, MongoDB"
+                    value={projStack}
+                    onChange={(e) => setProjStack(e.target.value)}
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-emerald-400" /> Portfolio Website</label>
-                  <input
-                    type="url"
-                    placeholder="https://myportfolio.com"
-                    value={portfolio}
-                    onChange={(e) => setPortfolio(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5"><Twitter className="w-3.5 h-3.5 text-sky-400" /> Twitter/X</label>
-                  <input
-                    type="url"
-                    placeholder="https://twitter.com/username"
-                    value={twitter}
-                    onChange={(e) => setTwitter(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
-                  />
+
+                {/* Project Screenshots Section */}
+                <div className="flex flex-col gap-2.5 border-t border-white/5 pt-4 mt-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5" /> Project Screenshots ({screenshots.length}/4)
+                    </label>
+                    <span className="text-[10px] text-neutral-500">Attach up to 4 screenshots</span>
+                  </div>
+
+                  {/* Screenshots Grid */}
+                  <div className="grid grid-cols-4 gap-3">
+                    {screenshots.map((src, i) => (
+                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden bg-neutral-900 border border-white/10 group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteScreenshot(i)}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-500 hover:text-rose-450 transition-opacity"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {screenshots.length < 4 && (
+                      <label className="relative aspect-video rounded-xl border border-dashed border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-neutral-400 hover:text-white">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider">Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleScreenshotUpload}
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* STEP 3: RESUME UPLOAD */}
           {step === 3 && (
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-bold flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-400" /> Resume Upload
+                  <FileText className="w-5 h-5 text-blue-400" /> Resume Link
                 </h3>
-                <p className="text-xs text-neutral-400">Upload your latest PDF resume. Recruiters can view or download it directly.</p>
+                <p className="text-xs text-neutral-400">Upload your PDF resume. Recruiters can view or download it directly from your page.</p>
               </div>
 
-              {/* Drag and Drop Container */}
-              <div className="border border-dashed border-white/10 hover:border-indigo-400/40 bg-white/5 p-8 rounded-2xl flex flex-col items-center justify-center gap-3 transition-colors relative cursor-pointer">
+              <div className="border border-dashed border-white/10 hover:border-blue-500/40 bg-white/5 p-8 rounded-2xl flex flex-col items-center justify-center gap-3 transition-colors relative cursor-pointer">
                 <Upload className="w-8 h-8 text-neutral-400" />
                 <div className="flex flex-col items-center text-center gap-1">
                   <span className="text-xs font-semibold text-white">Click or drag your PDF resume here</span>
@@ -471,15 +449,15 @@ export default function Onboarding() {
                   type="file"
                   accept=".pdf"
                   className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={(e) => handleFileUpload(e, "resume")}
+                  onChange={handleFileUpload}
                 />
               </div>
 
               {resumeFileName && (
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-indigo-500/15 bg-indigo-950/10 text-xs">
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-blue-500/15 bg-blue-950/10 text-xs">
                   <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
-                    <span className="truncate font-medium text-indigo-200">{resumeFileName}</span>
+                    <FileText className="w-4 h-4 text-blue-450 shrink-0" />
+                    <span className="truncate font-medium text-blue-200">{resumeFileName}</span>
                   </div>
                   <button 
                     onClick={() => { setResumeFileName(""); setResumeUrl(""); }}
@@ -492,285 +470,92 @@ export default function Onboarding() {
             </div>
           )}
 
+          {/* STEP 4: SOCIAL LINKS */}
           {step === 4 && (
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-teal-400" /> Skills Section
+                  <LinkIcon className="w-5 h-5 text-blue-400" /> Connect Channels
                 </h3>
-                <p className="text-xs text-neutral-400">Categorize your core tech stacks and libraries.</p>
+                <p className="text-xs text-neutral-400">Recruiters can follow your LinkedIn, GitHub, or Twitter links directly.</p>
               </div>
 
-              {/* Skill Input Form */}
-              <div className="flex gap-2 items-end">
-                <div className="flex-1 flex flex-col gap-1">
-                  <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Skill Name</label>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
+                    <Linkedin className="w-3.5 h-3.5 text-blue-400" /> LinkedIn Profile Link
+                  </label>
                   <input
-                    type="text"
-                    placeholder="React, Docker, AWS"
-                    value={newSkillName}
-                    onChange={(e) => setNewSkillName(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50"
-                    onKeyDown={(e) => e.key === "Enter" && addSkill()}
+                    type="url"
+                    placeholder="https://linkedin.com/in/username"
+                    value={linkedin}
+                    onChange={(e) => setLinkedin(e.target.value)}
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Category</label>
-                  <select
-                    value={newSkillCategory}
-                    onChange={(e) => setNewSkillCategory(e.target.value as Skill["category"])}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-xs text-neutral-300 focus:outline-none focus:border-neutral-400/50"
-                  >
-                    <option value="Frontend">Frontend</option>
-                    <option value="Backend">Backend</option>
-                    <option value="Database">Database</option>
-                    <option value="Cloud">Cloud</option>
-                    <option value="Tools">Tools</option>
-                    <option value="Languages">Languages</option>
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
+                    <Github className="w-3.5 h-3.5 text-neutral-300" /> GitHub Profile Link
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://github.com/username"
+                    value={github}
+                    onChange={(e) => setGithub(e.target.value)}
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                  />
                 </div>
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-white text-neutral-950 hover:bg-neutral-200"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Skill Badges List */}
-              <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto p-1.5">
-                {skills.map((s, idx) => (
-                  <div 
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/5 text-xs"
-                  >
-                    <span className="font-semibold">{s.name}</span>
-                    <span className="text-[9px] text-neutral-400 uppercase tracking-widest">({s.category})</span>
-                    <button onClick={() => removeSkill(idx)} className="text-neutral-500 hover:text-white">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-                {skills.length === 0 && (
-                  <span className="text-xs text-neutral-500 italic">No skills added yet.</span>
-                )}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
+                    <Twitter className="w-3.5 h-3.5 text-sky-400" /> Twitter / X Profile Link
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://twitter.com/username"
+                    value={twitter}
+                    onChange={(e) => setTwitter(e.target.value)}
+                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                  />
+                </div>
               </div>
             </div>
           )}
 
+          {/* STEP 5: CLAIM USERNAME */}
           {step === 5 && (
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-indigo-400" /> Featured Projects
+                  <CheckCircle className="w-5 h-5 text-blue-400" /> Choose Link Username
                 </h3>
-                <p className="text-xs text-neutral-400">Add highlight projects to showcase in your portfolio section.</p>
+                <p className="text-xs text-neutral-400">Pick a unique username. This forms your permanent showcase link.</p>
               </div>
 
-              {/* Add Project Form Drawer */}
-              <div className="flex flex-col gap-3 p-4 rounded-2xl border border-white/5 bg-white/5">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Project Name</label>
-                    <input
-                      type="text"
-                      placeholder="MERN E-Commerce"
-                      value={projName}
-                      onChange={(e) => setProjName(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Tech Stack (comma-separated)</label>
-                    <input
-                      type="text"
-                      placeholder="React, Node, Mongo"
-                      value={projStack}
-                      onChange={(e) => setProjStack(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Short Description</label>
-                  <input
-                    type="text"
-                    placeholder="Fully responsive shopping application with integrated payment portals."
-                    value={projDesc}
-                    onChange={(e) => setProjDesc(e.target.value)}
-                    className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">GitHub Repository URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://github.com/..."
-                      value={projGit}
-                      onChange={(e) => setProjGit(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Live Demo URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://mydemo.com"
-                      value={projLive}
-                      onChange={(e) => setProjLive(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={addProject}
-                  className="h-9 w-full rounded-lg bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 active:scale-98 transition-all"
-                >
-                  Add Project to List
-                </button>
-              </div>
-
-              {/* Added Projects List */}
-              <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto">
-                {projects.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-white/5 text-xs">
-                    <div className="flex flex-col">
-                      <span className="font-bold">{p.name}</span>
-                      <span className="text-[10px] text-neutral-400">{p.techStack.join(", ")}</span>
-                    </div>
-                    <button onClick={() => removeProject(p.id || "")} className="text-neutral-500 hover:text-white">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 6 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Award className="w-5 h-5 text-indigo-400" /> Certifications
-                </h3>
-                <p className="text-xs text-neutral-400">Optional: Add relevant certifications, bootcamps, or course details.</p>
-              </div>
-
-              {/* Add Cert Form */}
-              <div className="flex flex-col gap-3 p-4 rounded-2xl border border-white/5 bg-white/5">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Certification Name</label>
-                    <input
-                      type="text"
-                      placeholder="Solutions Architect"
-                      value={certName}
-                      onChange={(e) => setCertName(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Issuer Agency</label>
-                    <input
-                      type="text"
-                      placeholder="AWS, Vercel"
-                      value={certIssuer}
-                      onChange={(e) => setCertIssuer(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Issue Date</label>
-                    <input
-                      type="text"
-                      placeholder="June 2025"
-                      value={certDate}
-                      onChange={(e) => setCertDate(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400">Credential URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://verify.com/cert"
-                      value={certUrl}
-                      onChange={(e) => setCertUrl(e.target.value)}
-                      className="h-9 px-3 rounded-lg border border-white/10 bg-white/5 text-xs focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={addCertification}
-                  className="h-9 w-full rounded-lg bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 active:scale-98 transition-all"
-                >
-                  Add Certification
-                </button>
-              </div>
-
-              {/* Added Certifications List */}
-              <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto">
-                {certifications.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-white/5 text-xs">
-                    <div className="flex flex-col">
-                      <span className="font-bold">{c.name}</span>
-                      <span className="text-[10px] text-neutral-400">{c.issuer}</span>
-                    </div>
-                    <button onClick={() => removeCertification(c.id || "")} className="text-neutral-500 hover:text-white">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 7 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-400" /> Choose Username
-                </h3>
-                <p className="text-xs text-neutral-400">This will be your permanent shareable URL link.</p>
-              </div>
-
-              <div className="flex flex-col gap-4 mt-4">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Select Username</label>
+              <div className="flex flex-col gap-4 mt-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Permanent Username</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-xs text-neutral-500 font-medium">hire.me/</span>
+                    <span className="absolute left-3.5 text-xs text-neutral-500 font-semibold select-none">hire.me/</span>
                     <input
                       type="text"
                       placeholder="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
-                      className="w-full h-11 pl-20 pr-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-neutral-400/50 font-semibold"
+                      className="w-full h-11 pl-20 pr-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50 font-bold"
                       required
                     />
                     {usernameAvailable !== null && (
-                      <span className={`absolute right-3.5 text-xs font-semibold ${usernameAvailable ? "text-emerald-500" : "text-rose-500"}`}>
+                      <span className={`absolute right-3.5 text-xs font-semibold ${usernameAvailable ? "text-emerald-400" : "text-rose-500"}`}>
                         {usernameAvailable ? "Available" : "Taken"}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {error && (
-                  <div className="text-xs text-rose-400 p-2.5 bg-rose-950/10 border border-rose-500/10 rounded-xl">
-                    {error}
-                  </div>
-                )}
-
                 <div className="p-4 rounded-2xl border border-white/5 bg-white/5 flex flex-col gap-2 mt-2">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Example Links Generated</h4>
-                  <div className="flex flex-col gap-1 text-[11px] font-mono text-neutral-400">
-                    <span>- http://localhost:3001/{username || "username"}</span>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Your Showcase URL</h4>
+                  <div className="text-xs font-mono text-neutral-400">
+                    http://localhost:3000/{username || "username"}
                   </div>
                 </div>
               </div>
@@ -778,7 +563,7 @@ export default function Onboarding() {
           )}
         </div>
 
-        {/* Wizard Controls */}
+        {/* Stepper Wizard Controls */}
         <div className="flex items-center justify-between border-t border-white/5 pt-4">
           <button
             onClick={prevStep}
@@ -788,10 +573,10 @@ export default function Onboarding() {
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
           
-          {step < 7 ? (
+          {step < 5 ? (
             <button
               onClick={nextStep}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-white/10 px-4 py-2 rounded-xl border border-white/10 hover:bg-white/20 active:scale-95 transition-all"
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-950 bg-white px-5 py-2.5 rounded-xl hover:bg-neutral-200 active:scale-95 transition-all"
             >
               Next <ArrowRight className="w-4 h-4" />
             </button>
@@ -799,9 +584,9 @@ export default function Onboarding() {
             <button
               onClick={handleComplete}
               disabled={loading || !usernameAvailable}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-950 bg-white px-5 py-2.5 rounded-xl hover:bg-neutral-200 active:scale-95 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-950 bg-blue-500 text-white px-5 py-2.5 rounded-xl hover:bg-blue-600 active:scale-95 transition-all disabled:opacity-50"
             >
-              {loading ? "Creating Profile..." : "Create Profile"}
+              {loading ? "Generating Link..." : "Generate Link"}
             </button>
           )}
         </div>

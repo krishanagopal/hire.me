@@ -16,26 +16,10 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    provider: {
-      type: String,
-      enum: ["google", "github", "email"],
-      required: true,
-    },
-    googleId: {
-      type: String,
-      default: null,
-    },
-    githubId: {
-      type: String,
-      default: null,
-    },
+    // Add additional authentication fields (e.g. password, roles, etc.) below
     avatar: {
       type: String,
       default: "",
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
     },
     onboardingCompleted: {
       type: Boolean,

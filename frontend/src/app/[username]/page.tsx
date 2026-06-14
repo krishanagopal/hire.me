@@ -73,7 +73,7 @@ export default function PublicProfile({ params }: PageProps) {
       <div className="min-h-screen bg-[#030304] flex items-center justify-center text-neutral-400 select-none">
         <div className="flex flex-col items-center gap-3">
           <RefreshCw className="w-8 h-8 animate-spin text-amber-500" />
-          <span className="text-sm font-semibold tracking-widest uppercase">Fetching Card...</span>
+          <span className="text-sm font-semibold tracking-widest uppercase">Loading Showcase...</span>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function PublicProfile({ params }: PageProps) {
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-extrabold tracking-tight">Profile Not Found</h2>
             <p className="text-sm text-neutral-400 leading-normal">
-              The profile card link for <span className="font-mono text-white font-semibold">/{username}</span> is unclaimed or has been deactivated.
+              The showcase link for <span className="font-mono text-white font-semibold">/{username}</span> is unclaimed or has been deactivated.
             </p>
           </div>
           <div className="w-full flex flex-col gap-3.5 mt-2">

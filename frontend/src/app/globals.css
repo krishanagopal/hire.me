@@ -222,7 +222,7 @@ input[type="range"]::-moz-range-thumb {
 .fanned-card {
   position: relative;
   width: 100%;
-  height: 240px;
+  height: 168px; /* shortened by 30% from 240px */
   border-radius: 1.25rem;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
@@ -244,7 +244,7 @@ input[type="range"]::-moz-range-thumb {
 .features-card {
   position: relative;
   width: 100%;
-  height: 360px;
+  height: 252px; /* shortened by 30% from 360px */
   border-radius: 1.25rem;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
@@ -254,7 +254,7 @@ input[type="range"]::-moz-range-thumb {
 
 @media (min-width: 768px) {
   .fanned-card-container {
-    height: 380px;
+    height: 266px; /* shortened by 30% from 380px */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -264,7 +264,7 @@ input[type="range"]::-moz-range-thumb {
   .fanned-card {
     position: absolute;
     width: 200px;
-    height: 270px;
+    height: 189px; /* shortened by 30% from 270px */
     border-radius: 1.5rem;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
     transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
@@ -272,12 +272,12 @@ input[type="range"]::-moz-range-thumb {
   }
 
   /* Base states for each index in the fanned arc - symmetrical z-index and positions */
-  .fanned-card:nth-child(1) { --tx: -230px; --ty: 24px; --rot: -20deg; z-index: 10; }
-  .fanned-card:nth-child(2) { --tx: -140px; --ty: 9px; --rot: -12deg; z-index: 11; }
-  .fanned-card:nth-child(3) { --tx: -45px; --ty: 2px; --rot: -4deg; z-index: 12; }
-  .fanned-card:nth-child(4) { --tx: 45px; --ty: 2px; --rot: 4deg; z-index: 12; }
-  .fanned-card:nth-child(5) { --tx: 140px; --ty: 9px; --rot: 12deg; z-index: 11; }
-  .fanned-card:nth-child(6) { --tx: 230px; --ty: 24px; --rot: 20deg; z-index: 10; }
+  .fanned-card:nth-child(1) { --tx: -230px; --ty: 16.8px; --rot: -20deg; z-index: 10; }
+  .fanned-card:nth-child(2) { --tx: -140px; --ty: 6.3px; --rot: -12deg; z-index: 11; }
+  .fanned-card:nth-child(3) { --tx: -45px; --ty: 1.4px; --rot: -4deg; z-index: 12; }
+  .fanned-card:nth-child(4) { --tx: 45px; --ty: 1.4px; --rot: 4deg; z-index: 12; }
+  .fanned-card:nth-child(5) { --tx: 140px; --ty: 6.3px; --rot: 12deg; z-index: 11; }
+  .fanned-card:nth-child(6) { --tx: 230px; --ty: 16.8px; --rot: 20deg; z-index: 10; }
 
   /* Individual hover - bring card to top without moving, scaling, or straightening (no interactive displacement effect) */
   .fanned-card:hover {
@@ -288,7 +288,7 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .features-card-container {
-    height: 480px;
+    height: 336px; /* shortened by 30% from 480px */
     display: flex !important;
     align-items: center;
     justify-content: center;
@@ -298,7 +298,7 @@ input[type="range"]::-moz-range-thumb {
   .features-card {
     position: absolute;
     width: 300px;
-    height: 405px;
+    height: 283.5px; /* shortened by 30% from 405px */
     border-radius: 1.5rem;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
     transform: translate(var(--tx), var(--ty)) scale(var(--scale)) rotate(var(--rot, 0deg));
@@ -306,14 +306,14 @@ input[type="range"]::-moz-range-thumb {
   }
 
   /* Stacking order and positioning for 8 cards in overlapping horizontal stack */
-  .features-card:nth-child(1) { --tx: -380px; --ty: 25px; --scale: 0.76; z-index: 10; }
-  .features-card:nth-child(2) { --tx: -275px; --ty: 16px; --scale: 0.84; z-index: 11; }
-  .features-card:nth-child(3) { --tx: -170px; --ty: 8px;  --scale: 0.92; z-index: 12; }
-  .features-card:nth-child(4) { --tx: -60px;  --ty: 0px;  --scale: 1.0;  z-index: 13; }
-  .features-card:nth-child(5) { --tx: 60px;   --ty: 0px;  --scale: 1.0;  z-index: 13; }
-  .features-card:nth-child(6) { --tx: 170px;  --ty: 8px;  --scale: 0.92; z-index: 12; }
-  .features-card:nth-child(7) { --tx: 275px;  --ty: 16px; --scale: 0.84; z-index: 11; }
-  .features-card:nth-child(8) { --tx: 380px;  --ty: 25px; --scale: 0.76; z-index: 10; }
+  .features-card:nth-child(1) { --tx: -510px; --ty: 17.5px; --scale: 0.76; z-index: 10; }
+  .features-card:nth-child(2) { --tx: -380px; --ty: 11.2px; --scale: 0.84; z-index: 11; }
+  .features-card:nth-child(3) { --tx: -250px; --ty: 5.6px;  --scale: 0.92; z-index: 12; }
+  .features-card:nth-child(4) { --tx: -110px; --ty: 0px;   --scale: 1.0;  z-index: 13; }
+  .features-card:nth-child(5) { --tx: 110px;  --ty: 0px;   --scale: 1.0;  z-index: 13; }
+  .features-card:nth-child(6) { --tx: 250px;  --ty: 5.6px;  --scale: 0.92; z-index: 12; }
+  .features-card:nth-child(7) { --tx: 380px;  --ty: 11.2px; --scale: 0.84; z-index: 11; }
+  .features-card:nth-child(8) { --tx: 510px;  --ty: 17.5px; --scale: 0.76; z-index: 10; }
 
   /* Hover state - bring to top and scale slightly */
   .features-card:hover {

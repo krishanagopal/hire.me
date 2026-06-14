@@ -29,6 +29,7 @@ export interface Project {
   liveUrl?: string;
   demoVideoUrl?: string;
   thumbnailUrl?: string;
+  screenshots?: string[];
   isFeatured?: boolean;
 }
 
@@ -85,6 +86,7 @@ export interface Profile {
   certifications?: Certification[];
   resumeUrl?: string;
   resumeFileName?: string;
+  tier?: "free" | "pro";
   viewsCount?: number;
   downloadsCount?: number;
   clicksCount?: number;

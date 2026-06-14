@@ -1,34 +1,10 @@
-const jwt = require("jsonwebtoken");
-
+// A fresh placeholder middleware for route protection.
+// Modify this to implement your own verification mechanism (e.g., JWT verification).
 const protect = async (req, res, next) => {
-  try {
-    let token = req.headers.authorization;
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized",
-      });
-    }
-
-    if (token.startsWith("Bearer ") || token.startsWith("bearer ")) {
-      token = token.slice(7);
-    }
-
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "hireme_super_secret_2026"
-    );
-
-    req.user = decoded;
-
-    next();
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
-  }
+  // For now, it passes through to allow development of other routes.
+  // You can set a mock user here for testing, e.g.:
+  // req.user = { id: "your_mock_user_id" };
+  next();
 };
 
 module.exports = protect;

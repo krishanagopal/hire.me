@@ -38,6 +38,11 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    screenshots: [
+      {
+        type: String,
+      },
+    ],
     isFeatured: {
       type: Boolean,
       default: false,
