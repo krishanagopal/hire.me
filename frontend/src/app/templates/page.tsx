@@ -125,7 +125,7 @@ export default function TemplatesPage() {
               Login
             </Link>
             <Link 
-              href="/register"
+              href="/onboarding"
               className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-black text-white hover:bg-neutral-800 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
             >
               Get Started
@@ -251,7 +251,7 @@ export default function TemplatesPage() {
                     className="h-10 rounded-xl text-xs font-bold text-neutral-950 active:scale-95 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                     style={{ backgroundColor: customizerColor, color: "#ffffff" }}
                   >
-                    <FileText className="w-3.5 h-3.5" /> Download Resume
+                    <FileText className="w-3.5 h-3.5" /> View Resume
                   </button>
                 </div>
               )}
@@ -265,7 +265,7 @@ export default function TemplatesPage() {
                     <p className="text-xs text-neutral-300 leading-relaxed font-sans">{themeDetails.minimal.desc}</p>
                   </div>
                   <button className="h-10 rounded-lg border border-neutral-350 text-xs font-bold font-sans hover:bg-neutral-900 hover:text-white transition-all">
-                    Download PDF Document
+                    View PDF Document
                   </button>
                 </div>
               )}
@@ -363,7 +363,7 @@ export default function TemplatesPage() {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto">
             <Link 
-              href="/register"
+              href="/onboarding"
               className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-all text-center"
             >
               Get Started Free

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
-import { apiMock, Profile } from "../../utils/apiMock";
+import { apiMock, Profile, resolveMediaUrl } from "../../utils/apiMock";
 import { 
   User, Link as LinkIcon, FileText, Globe, CheckCircle, 
-  ArrowRight, ArrowLeft, Upload, X, Play, Image as ImageIcon, Trash2
+  Upload, X, Play, Image as ImageIcon, Trash2, Camera, ShieldCheck
 } from "lucide-react";
 
 // Inline brand icon SVGs
@@ -28,79 +28,102 @@ const Twitter = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default function Onboarding() {
+function OnboardingForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const claimParam = searchParams.get("claim");
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState("basic-details");
+
+  // Lightbox & Preview states
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [activeLightboxVideo, setActiveLightboxVideo] = useState<string | null>(null);
+  const [showResumeViewer, setShowResumeViewer] = useState(false);
+
+  const getYoutubeEmbedUrl = (url: string) => {
+    let videoId = "";
+    try {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      if (match && match[2].length === 11) {
+        videoId = match[2];
+      }
+    } catch (e) {}
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : null;
+  };
+
+  const getYoutubeThumbnailUrl = (url: string) => {
+    let videoId = "";
+    try {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      if (match && match[2].length === 11) {
+        videoId = match[2];
+      }
+    } catch (e) {}
+    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+  };
 
   // Step 1: Basic Info
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
-  // Step 2: Project Details (Single main project showcase)
-  const [projName, setProjName] = useState("");
-  const [projDesc, setProjDesc] = useState("");
-  const [projStack, setProjStack] = useState("");
-  const [projVideoUrl, setProjVideoUrl] = useState("");
-  const [projGit, setProjGit] = useState("");
-  const [projLive, setProjLive] = useState("");
+  // Step 2: Project Details (Supports up to 3 projects)
+  const [projectsList, setProjectsList] = useState<any[]>([]);
+  const [isEditingProject, setIsEditingProject] = useState(true); // Open by default
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // Step 3: Resume
+  // Temporary form states for the project being edited
+  const [tempProjName, setTempProjName] = useState("");
+  const [tempProjDesc, setTempProjDesc] = useState("");
+  const [tempProjStack, setTempProjStack] = useState("");
+  const [tempProjVideoType, setTempProjVideoType] = useState<"link" | "upload">("link");
+  const [tempProjVideoUrl, setTempProjVideoUrl] = useState("");
+  const [tempProjVideoFileName, setTempProjVideoFileName] = useState("");
+  const [tempProjGit, setTempProjGit] = useState("");
+  const [tempProjLive, setTempProjLive] = useState("");
+  const [tempScreenshots, setTempScreenshots] = useState<string[]>([]);
+  const [tempProjectError, setTempProjectError] = useState("");
+
+  // Step 3: Resume & Socials
   const [resumeFileName, setResumeFileName] = useState("");
   const [resumeUrl, setResumeUrl] = useState("");
-
-  // Step 4: Social Links
   const [linkedin, setLinkedin] = useState("");
   const [github, setGithub] = useState("");
   const [twitter, setTwitter] = useState("");
-
-  // Step 5: Username selection
   const [username, setUsername] = useState("");
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
 
-  // Screenshots state
-  const [screenshots, setScreenshots] = useState<string[]>([]);
-
-  // Screenshot upload handlers
-  const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (screenshots.length >= 4) {
-      setError("Free tier limit: Maximum of 4 screenshots allowed.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      setScreenshots([...screenshots, base64]);
-      setError("");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleDeleteScreenshot = (idx: number) => {
-    setScreenshots(screenshots.filter((_: string, i: number) => i !== idx));
-  };
-
   // Authenticate user on mount
   useEffect(() => {
-    const user = apiMock.getCurrentUser();
+    let user = apiMock.getCurrentUser();
     if (!user) {
-      router.push("/login");
-    } else {
-      setCurrentUser(user);
-      setName(user.name || "");
-      // Pre-fill GitHub if username exists
-      if (user.username) {
-        setUsername(user.username);
-      }
+      const rand = Math.floor(100000 + Math.random() * 900000);
+      const email = `mockuser_${rand}@hire.me`;
+      user = {
+        id: `mock_user_id_${rand}`,
+        email: email,
+        name: `Mock User ${rand}`,
+        provider: "mock",
+        isVerified: true,
+        onboardingCompleted: false
+      };
+      localStorage.setItem("tc_logged_user", JSON.stringify(user));
+      localStorage.setItem("tc_token", `mock_token_${email}`);
     }
-  }, [router]);
+
+    setCurrentUser(user);
+    setName(user.name || "");
+    if (user.username) {
+      setUsername(user.username);
+    } else if (claimParam) {
+      setUsername(claimParam);
+    }
+  }, [router, claimParam]);
 
   // Check username availability
   useEffect(() => {
@@ -116,6 +139,64 @@ export default function Onboarding() {
     return () => clearTimeout(timer);
   }, [username]);
 
+  // Watch Scroll Position to Update Active Section Highlight in Stepper
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ["basic-details", "project-details", "resume-socials"];
+      const scrollPosition = window.scrollY + 280;
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Profile Avatar Upload Handler
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAvatarUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Screenshot upload handlers
+  const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (tempScreenshots.length >= 4) {
+      setTempProjectError("Free tier limit: Maximum of 4 screenshots allowed.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setTempScreenshots([...tempScreenshots, base64]);
+      setTempProjectError("");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteScreenshot = (idx: number) => {
+    setTempScreenshots(tempScreenshots.filter((_, i) => i !== idx));
+  };
+
   // Convert files to base64
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -130,28 +211,175 @@ export default function Onboarding() {
     reader.readAsDataURL(file);
   };
 
-  // Form Submit (Complete Onboarding)
-  const handleComplete = async () => {
-    if (!username || !usernameAvailable) {
-      setError("Please select a valid, unique username.");
+  // Smooth Scroll Trigger
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      setActiveSection(id);
+    }
+  };
+
+  // Stepper state updates dynamically
+  const isStepComplete = (stepNum: number) => {
+    if (stepNum === 1) return !!name.trim();
+    if (stepNum === 2) return projectsList.length > 0;
+    if (stepNum === 3) return !!username.trim() && usernameAvailable === true;
+    return false;
+  };
+
+  // Project List Helpers
+  const handleAddProjectClick = () => {
+    setTempProjName("");
+    setTempProjDesc("");
+    setTempProjStack("");
+    setTempProjVideoType("link");
+    setTempProjVideoUrl("");
+    setTempProjVideoFileName("");
+    setTempProjGit("");
+    setTempProjLive("");
+    setTempScreenshots([]);
+    setTempProjectError("");
+    setEditingIndex(null);
+    setIsEditingProject(true);
+  };
+
+  const handleEditProject = (idx: number) => {
+    const proj = projectsList[idx];
+    setTempProjName(proj.name);
+    setTempProjDesc(proj.description || "");
+    setTempProjStack(proj.techStack ? proj.techStack.join(", ") : "");
+    
+    // Check if the saved demo video is a base64 upload
+    const isUploaded = proj.demoVideoUrl && (proj.demoVideoUrl.startsWith("data:video/") || proj.demoVideoUrl.includes("/media/"));
+    setTempProjVideoType(isUploaded ? "upload" : "link");
+    setTempProjVideoUrl(proj.demoVideoUrl || "");
+    setTempProjVideoFileName(isUploaded ? "Uploaded Video File" : "");
+    
+    setTempProjGit(proj.githubUrl || "");
+    setTempProjLive(proj.liveUrl || "");
+    setTempScreenshots(proj.screenshots || []);
+    setTempProjectError("");
+    setEditingIndex(idx);
+    setIsEditingProject(true);
+  };
+
+  const handleDeleteProject = (idx: number) => {
+    const updated = projectsList.filter((_, i) => i !== idx);
+    setProjectsList(updated);
+    if (updated.length === 0) {
+      setTempProjName("");
+      setTempProjDesc("");
+      setTempProjStack("");
+      setTempProjVideoType("link");
+      setTempProjVideoUrl("");
+      setTempProjVideoFileName("");
+      setTempProjGit("");
+      setTempProjLive("");
+      setTempScreenshots([]);
+      setTempProjectError("");
+      setEditingIndex(null);
+      setIsEditingProject(true);
+    }
+  };
+
+  const handleSaveProject = () => {
+    if (!tempProjName.trim()) {
+      setTempProjectError("Project Name is required.");
       return;
     }
+    if (!tempProjDesc.trim()) {
+      setTempProjectError("Project Description is required.");
+      return;
+    }
+    if (!tempProjVideoUrl) {
+      setTempProjectError(
+        tempProjVideoType === "upload" 
+          ? "Please upload a demo video file." 
+          : "Demo Video URL is required."
+      );
+      return;
+    }
+
+    const newProject = {
+      name: tempProjName,
+      description: tempProjDesc,
+      techStack: tempProjStack ? tempProjStack.split(",").map(t => t.trim()).filter(Boolean) : [],
+      githubUrl: tempProjGit || undefined,
+      liveUrl: tempProjLive || undefined,
+      demoVideoUrl: tempProjVideoUrl || undefined,
+      screenshots: tempScreenshots || [],
+      isFeatured: editingIndex === 0 || (editingIndex === null && projectsList.length === 0)
+    };
+
+    if (editingIndex === null) {
+      setProjectsList([...projectsList, newProject]);
+    } else {
+      const updated = [...projectsList];
+      updated[editingIndex] = newProject;
+      setProjectsList(updated);
+    }
+
+    setIsEditingProject(false);
+    setEditingIndex(null);
+  };
+
+  const handleCancelProject = () => {
+    setIsEditingProject(false);
+    setEditingIndex(null);
+  };
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size limit: 15MB
+    const sizeInMB = file.size / (1024 * 1024);
+    if (sizeInMB > 15) {
+      setTempProjectError("Video file exceeds 15MB. Please upload a smaller video or use a YouTube link.");
+      e.target.value = ""; // Clear file selector
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setTempProjVideoUrl(base64);
+      setTempProjVideoFileName(file.name);
+      setTempProjectError("");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Form Submit (Complete Onboarding)
+  const handleComplete = async () => {
+    if (!name.trim()) {
+      setError("Full Name is required in Basic Details section.");
+      scrollToSection("basic-details");
+      return;
+    }
+    if (projectsList.length === 0) {
+      setError("Please add at least one showcase project in the Contact Details section.");
+      scrollToSection("project-details");
+      return;
+    }
+    if (!username.trim() || !usernameAvailable) {
+      setError("Please choose a valid, unique username in the Claim Link section.");
+      scrollToSection("resume-socials");
+      return;
+    }
+
     setLoading(true);
     setError("");
-
-    // Build the primary project showcase object
-    const projectsList = projName ? [
-      {
-        name: projName,
-        description: projDesc,
-        techStack: projStack ? projStack.split(",").map(t => t.trim()).filter(Boolean) : [],
-        githubUrl: projGit || undefined,
-        liveUrl: projLive || undefined,
-        demoVideoUrl: projVideoUrl || undefined,
-        screenshots: screenshots || [],
-        isFeatured: true
-      }
-    ] : [];
 
     const profileData: Partial<Profile> = {
       username,
@@ -159,7 +387,8 @@ export default function Onboarding() {
       headline: headline || "Software Developer",
       bio: bio || "Developer Showcase",
       theme: "modern",
-      accentColor: "#3b82f6", // default blue accent
+      accentColor: "#ff922b",
+      avatarUrl: avatarUrl || undefined,
       socialLinks: {
         linkedin: linkedin || undefined,
         github: github || undefined,
@@ -205,393 +434,939 @@ export default function Onboarding() {
     }
   };
 
-  const nextStep = () => {
-    // Basic step validation
-    if (step === 1 && !name.trim()) {
-      setError("Name is required");
-      return;
-    }
-    if (step === 2 && !projName.trim()) {
-      setError("Project Name is required");
-      return;
-    }
-    if (step === 2 && !projVideoUrl.trim()) {
-      setError("Project Demo Video URL is required");
-      return;
-    }
-    setError("");
-    setStep(prev => Math.min(prev + 1, 5));
-  };
-  
-  const prevStep = () => {
-    setError("");
-    setStep(prev => Math.max(prev - 1, 1));
-  };
-
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#030304] text-white px-4 py-20 select-none">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-start bg-gradient-to-br from-[#ffdca3] via-[#ff9c50] to-[#e8590c] text-neutral-800 px-4 py-20 overflow-hidden font-sans">
       
-      {/* Background glow effects */}
-      <div className="absolute top-[10%] left-[10%] w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[10%] w-[450px] h-[450px] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+      {/* Decorative floating spheres */}
+      <div className="absolute top-[8%] left-[-15%] w-[45vw] h-[45vw] rounded-full bg-white/20 blur-[90px] pointer-events-none" />
+      <div className="absolute bottom-[5%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#ffdca3]/40 blur-[110px] pointer-events-none" />
+      <div className="absolute top-[45%] right-[5%] w-[200px] h-[200px] rounded-full bg-[#ffa94d]/40 blur-[70px] pointer-events-none" />
+      <div className="absolute bottom-[35%] left-[8%] w-[250px] h-[250px] rounded-full bg-white/35 blur-[80px] pointer-events-none" />
 
       {/* Floating Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-neutral-950/20 backdrop-blur-md border-b border-white/5">
-        <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-neutral-300 to-neutral-600 bg-clip-text text-transparent">
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-white/20 backdrop-blur-md border-b border-white/25">
+        <span className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm">
           hire.me
         </span>
-        <span className="text-xs text-neutral-400 font-semibold">
+        <span className="text-xs text-white/95 font-bold uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
           Setup Showcase Link
         </span>
       </header>
 
-      {/* Progress Tracker Wrapper */}
-      <div className="w-full max-w-xl mb-8 mt-8">
-        <div className="flex justify-between items-center text-xs text-neutral-400 font-bold uppercase tracking-wider mb-2">
-          <span>Showcase Progress</span>
-          <span>Step {step} of 5</span>
-        </div>
-        <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-blue-500 transition-all duration-300 ease-out"
-            style={{ width: `${(step / 5) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Wizard Form Frame */}
-      <div className="w-full max-w-xl min-h-[460px] p-6 md:p-8 rounded-3xl border border-white/5 bg-neutral-950/45 backdrop-blur-xl shadow-2xl flex flex-col justify-between">
+      {/* Main Container */}
+      <div className="w-full max-w-4xl mt-12 z-10 flex flex-col gap-6">
         
-        {/* Step Content */}
-        <div className="flex-grow mb-8">
-          {error && (
-            <div className="mb-4 text-xs text-rose-400 p-3 bg-rose-950/15 border border-rose-500/10 rounded-xl">
-              {error}
+        {/* Error banner */}
+        {error && (
+          <div className="text-sm text-red-700 font-semibold p-4 bg-red-50 border border-red-200 rounded-2xl shadow-sm transition-all duration-300 animate-pulse">
+            {error}
+          </div>
+        )}
+
+        {/* Form white card container */}
+        <div className="w-full p-8 md:p-12 rounded-[32px] border border-white/40 bg-white/95 backdrop-blur-xl shadow-[0_24px_70px_rgba(232,89,12,0.15)] flex flex-col">
+          
+          <h2 className="text-3xl font-black text-center text-neutral-900 tracking-tight mb-2">Sign up</h2>
+          <p className="text-sm text-neutral-500 text-center font-medium mb-8">Enter your profile details to generate your live resume page</p>
+
+          {/* Stepper / Progress Checklist Navigation */}
+          <div className="flex justify-center items-center gap-2 md:gap-8 mb-12 border-b border-neutral-150 pb-8 select-none">
+            
+            {/* Step 1 */}
+            <div className="flex flex-col items-center cursor-pointer group" onClick={() => scrollToSection("basic-details")}>
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
+                activeSection === "basic-details"
+                  ? "bg-[#ff922b] text-white border-[#ff922b] shadow-md shadow-[#ff922b]/25"
+                  : isStepComplete(1)
+                    ? "bg-emerald-500 text-white border-emerald-500"
+                    : "bg-white text-neutral-400 border-neutral-300 group-hover:border-[#ff922b]/40"
+              }`}>
+                {isStepComplete(1) ? "✓" : "1"}
+              </div>
+              <span className={`text-[10px] md:text-xs mt-2 font-bold uppercase tracking-wider transition-colors duration-300 ${
+                activeSection === "basic-details" ? "text-[#ff922b]" : "text-neutral-400"
+              }`}>Basic Details</span>
             </div>
-          )}
 
-          {/* STEP 1: BASIC INFO */}
-          {step === 1 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-400" /> Basic Details
-                </h3>
-                <p className="text-xs text-neutral-400">Introduce yourself to hiring managers and recruiters visiting your link.</p>
-              </div>
+            <div className="w-8 md:w-16 h-[2px] bg-neutral-350 mb-6" />
 
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Headline</label>
-                  <input
-                    type="text"
-                    placeholder="MERN Stack Developer | React Native Architect"
-                    value={headline}
-                    onChange={(e) => setHeadline(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Short Bio</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Write a brief professional summary about yourself..."
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    className="p-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50 resize-none"
-                  />
-                </div>
+            {/* Step 2 */}
+            <div className="flex flex-col items-center cursor-pointer group" onClick={() => scrollToSection("project-details")}>
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
+                activeSection === "project-details"
+                  ? "bg-[#ff922b] text-white border-[#ff922b] shadow-md shadow-[#ff922b]/25"
+                  : isStepComplete(2)
+                    ? "bg-emerald-500 text-white border-emerald-500"
+                    : "bg-white text-neutral-400 border-neutral-300 group-hover:border-[#ff922b]/40"
+              }`}>
+                {isStepComplete(2) ? "✓" : "2"}
               </div>
+              <span className={`text-[10px] md:text-xs mt-2 font-bold uppercase tracking-wider transition-colors duration-300 ${
+                activeSection === "project-details" ? "text-[#ff922b]" : "text-neutral-400"
+              }`}>Contact Details</span>
             </div>
-          )}
 
-          {/* STEP 2: PROJECT SHOWREEL */}
-          {step === 2 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Play className="w-5 h-5 text-blue-400" /> Project Showreel Video
-                </h3>
-                <p className="text-xs text-neutral-400">Feature a demo video of your project at the center of your page.</p>
+            <div className="w-8 md:w-16 h-[2px] bg-neutral-350 mb-6" />
+
+            {/* Step 3 */}
+            <div className="flex flex-col items-center cursor-pointer group" onClick={() => scrollToSection("resume-socials")}>
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
+                activeSection === "resume-socials"
+                  ? "bg-[#ff922b] text-white border-[#ff922b] shadow-md shadow-[#ff922b]/25"
+                  : isStepComplete(3)
+                    ? "bg-emerald-500 text-white border-emerald-500"
+                    : "bg-white text-neutral-400 border-neutral-300 group-hover:border-[#ff922b]/40"
+              }`}>
+                {isStepComplete(3) ? "✓" : "3"}
               </div>
+              <span className={`text-[10px] md:text-xs mt-2 font-bold uppercase tracking-wider transition-colors duration-300 ${
+                activeSection === "resume-socials" ? "text-[#ff922b]" : "text-neutral-400"
+              }`}>Verification</span>
+            </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Project Name</label>
-                  <input
-                    type="text"
-                    placeholder="E.g., DevConnector Social Network"
-                    value={projName}
-                    onChange={(e) => setProjName(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                    required
-                  />
-                </div>
+          </div>
+
+          {/* FORM SECTIONS */}
+          <div className="flex flex-col gap-14">
+
+            {/* SECTION 1: BASIC DETAILS */}
+            <section id="basic-details" className="scroll-mt-28 transition-all duration-300">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-8 border-b border-neutral-100 pb-10">
                 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Demo Video URL</label>
-                  <input
-                    type="url"
-                    placeholder="E.g., https://www.youtube.com/watch?v=... or direct MP4 link"
-                    value={projVideoUrl}
-                    onChange={(e) => setProjVideoUrl(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                    required
-                  />
-                  <span className="text-[10px] text-neutral-500">Supports YouTube watch links, embeds, or direct video file links.</span>
+                {/* Form fields column */}
+                <div className="flex-grow w-full flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                      <User className="w-5 h-5 text-[#ff922b]" /> Basic Details
+                    </h3>
+                    <p className="text-xs text-neutral-400 mt-1">Introduce yourself to hiring managers and recruiters visiting your link.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    
+                    {/* Full Name */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Full Name</label>
+                      <input
+                        type="text"
+                        placeholder="Enter Full Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-neutral-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                        required
+                      />
+                    </div>
+
+                    {/* Headline */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Headline</label>
+                      <input
+                        type="text"
+                        placeholder="MERN Stack Developer | React Native Architect"
+                        value={headline}
+                        onChange={(e) => setHeadline(e.target.value)}
+                        className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-neutral-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                      />
+                    </div>
+
+                    {/* Bio */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Vision & Mission (Short Bio)</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Write a brief professional summary about yourself..."
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        className="w-full p-4 rounded-xl border border-neutral-350 bg-neutral-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 resize-none transition-all"
+                      />
+                    </div>
+
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">GitHub Repository URL</label>
+                {/* Avatar Photo Upload column */}
+                <div className="w-full md:w-44 flex flex-col items-center justify-center pt-8 shrink-0">
+                  <label className="relative cursor-pointer group">
+                    <div className="w-24 h-24 rounded-full border-2 border-dashed border-[#ff922b] bg-[#ff922b]/5 flex flex-col items-center justify-center gap-1 overflow-hidden transition-all group-hover:bg-[#ff922b]/10 group-hover:scale-102">
+                      {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={resolveMediaUrl(avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5 text-[#ff922b]" />
+                          <span className="text-[9px] font-extrabold uppercase text-[#ff922b] tracking-wider text-center">Add Photo</span>
+                        </>
+                      )}
+                    </div>
+                    
                     <input
-                      type="url"
-                      placeholder="https://github.com/..."
-                      value={projGit}
-                      onChange={(e) => setProjGit(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
                     />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Live Site URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://mysite.com"
-                      value={projLive}
-                      onChange={(e) => setProjLive(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                    />
-                  </div>
+
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setAvatarUrl("");
+                        }}
+                        className="absolute -top-1 -right-1 p-1 bg-red-100 border border-red-200 text-red-500 hover:text-red-700 rounded-full shadow-sm hover:scale-110 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </label>
+                  <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-3">Profile Photo</span>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Tech Stack (comma-separated)</label>
-                  <input
-                    type="text"
-                    placeholder="React, Express, TailwindCSS, MongoDB"
-                    value={projStack}
-                    onChange={(e) => setProjStack(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                  />
+              </div>
+            </section>
+
+            {/* SECTION 2: SHOWCASE PROJECTS */}
+            <section id="project-details" className="scroll-mt-28 transition-all duration-300">
+              <div className="flex flex-col gap-6 border-b border-neutral-100 pb-10">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                      <Play className="w-5 h-5 text-[#ff922b]" /> Showcase Projects ({projectsList.length}/3)
+                    </h3>
+                    <p className="text-xs text-neutral-400 mt-1">Feature up to 3 of your best projects with descriptions, code repositories, and demo videos.</p>
+                  </div>
+                  
+                  {!isEditingProject && projectsList.length < 3 && (
+                    <button
+                      type="button"
+                      onClick={handleAddProjectClick}
+                      className="text-xs font-bold text-[#ff922b] hover:text-[#e8590c] hover:underline transition-all cursor-pointer"
+                    >
+                      + Add Another Project
+                    </button>
+                  )}
                 </div>
 
-                {/* Project Screenshots Section */}
-                <div className="flex flex-col gap-2.5 border-t border-white/5 pt-4 mt-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5" /> Project Screenshots ({screenshots.length}/4)
-                    </label>
-                    <span className="text-[10px] text-neutral-500">Attach up to 4 screenshots</span>
-                  </div>
+                {/* Project List View */}
+                {!isEditingProject && projectsList.length > 0 && (
+                  <div className="flex flex-col gap-6">
+                    {projectsList.map((proj, idx) => (
+                      <div key={idx} className="bg-neutral-50/70 border border-neutral-200/60 rounded-2xl p-6 md:p-8 flex flex-col gap-5 shadow-inner">
+                        <div className="flex justify-between items-center border-b border-neutral-200/40 pb-3">
+                          <span className="text-xs font-extrabold text-neutral-850 uppercase tracking-wider">Project Showcase Details</span>
+                          <div className="flex items-center gap-2">
+                            {proj.isFeatured && (
+                              <span className="text-[9px] uppercase tracking-widest bg-[#ff922b]/10 text-[#ff922b] px-1.5 py-0.5 rounded border border-[#ff922b]/20">Primary Project</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleEditProject(idx)}
+                              className="px-2.5 py-1 text-[11px] font-bold text-neutral-600 hover:text-[#ff922b] bg-white border border-neutral-250 hover:border-[#ff922b]/50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProject(idx)}
+                              className="px-2.5 py-1 text-[11px] font-bold text-red-650 hover:bg-red-50 bg-white border border-red-200 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
 
-                  {/* Screenshots Grid */}
-                  <div className="grid grid-cols-4 gap-3">
-                    {screenshots.map((src, i) => (
-                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden bg-neutral-900 border border-white/10 group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteScreenshot(i)}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-500 hover:text-rose-450 transition-opacity"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-2">
+                          {/* Project Name */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-450">Project Name</label>
+                            <div className="w-full h-11 px-4 rounded-xl border border-neutral-250 bg-white flex items-center text-sm font-semibold text-neutral-850 select-all">
+                              {proj.name}
+                            </div>
+                          </div>
+
+                          {/* Tech Stack */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-450">Tech Stack</label>
+                            <div className="w-full h-11 px-4 rounded-xl border border-neutral-250 bg-white flex items-center text-sm font-semibold text-neutral-850 select-all">
+                              {proj.techStack ? proj.techStack.join(", ") : "N/A"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Project Description */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-450">Project Description</label>
+                          <div className="w-full p-4 rounded-xl border border-neutral-250 bg-white text-sm font-semibold text-neutral-850 select-all min-h-[70px] leading-relaxed">
+                            {proj.description}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Github URL */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-450">GitHub Repository URL</label>
+                            <div className="w-full h-11 px-4 rounded-xl border border-neutral-250 bg-white flex items-center text-sm font-semibold text-[#ff922b] select-all truncate">
+                              {proj.githubUrl ? (
+                                <a href={proj.githubUrl} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1.5 truncate">
+                                  {proj.githubUrl}
+                                </a>
+                              ) : "N/A"}
+                            </div>
+                          </div>
+
+                          {/* Live Site URL */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-450">Live Site URL</label>
+                            <div className="w-full h-11 px-4 rounded-xl border border-neutral-250 bg-white flex items-center text-sm font-semibold text-[#ff922b] select-all truncate">
+                              {proj.liveUrl ? (
+                                <a href={proj.liveUrl} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1.5 truncate">
+                                  {proj.liveUrl}
+                                </a>
+                              ) : "N/A"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Attachments & Previews row (video 200px*120px & screenshots) */}
+                        <div className="flex flex-col gap-2 border-t border-neutral-200/50 pt-4 mt-2">
+                          <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-450">Attachments & Previews</label>
+                          <div className="flex flex-wrap items-center gap-3">
+                            
+                            {/* Compact Video Preview: 200px * 120px */}
+                            {proj.demoVideoUrl && (
+                              <div 
+                                onClick={() => setActiveLightboxVideo(resolveMediaUrl(proj.demoVideoUrl) || null)}
+                                className="w-[200px] h-[120px] rounded-xl border border-neutral-300 overflow-hidden bg-black shrink-0 relative cursor-pointer shadow-md hover:border-[#ff922b]/50 group"
+                                title="Click to play demo video"
+                              >
+                                {proj.demoVideoUrl.startsWith("data:video/") || proj.demoVideoUrl.includes(".mp4") || proj.demoVideoUrl.includes("/media/") ? (
+                                  <video src={resolveMediaUrl(proj.demoVideoUrl)} className="w-full h-full object-cover pointer-events-none" preload="metadata" />
+                                ) : (
+                                  getYoutubeThumbnailUrl(proj.demoVideoUrl) ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={getYoutubeThumbnailUrl(proj.demoVideoUrl) || ""} alt="YT preview" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                                      <Play className="w-8 h-8 text-white fill-white drop-shadow-md" />
+                                    </div>
+                                  )
+                                )}
+                                <div className="absolute inset-0 bg-black/45 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                                  <Play className="w-8 h-8 text-white fill-white drop-shadow-md" />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Compact Screenshots Previews: 200px * 120px */}
+                            {proj.screenshots && proj.screenshots.map((src: string, sIdx: number) => (
+                              <div 
+                                key={sIdx}
+                                onClick={() => setLightboxImage(resolveMediaUrl(src))}
+                                className="w-[200px] h-[120px] rounded-xl border border-neutral-300 overflow-hidden bg-neutral-100 shrink-0 relative cursor-pointer shadow-md hover:border-[#ff922b]/50"
+                                title="Click to enlarge screenshot"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={resolveMediaUrl(src)} alt={`Screenshot ${sIdx + 1}`} className="w-full h-full object-cover" />
+                              </div>
+                            ))}
+
+                          </div>
+                        </div>
+
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Project Edit/Add Form Block */}
+                {isEditingProject && (
+                  <div className="bg-neutral-50/70 border border-neutral-200/60 rounded-2xl p-6 md:p-8 flex flex-col gap-5 shadow-inner">
                     
-                    {screenshots.length < 4 && (
-                      <label className="relative aspect-video rounded-xl border border-dashed border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-neutral-400 hover:text-white">
-                        <Upload className="w-4 h-4" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider">Upload</span>
+                    <div className="flex justify-between items-center border-b border-neutral-200/40 pb-3">
+                      <span className="text-sm font-extrabold text-neutral-800 uppercase tracking-wider">
+                        {editingIndex !== null ? "Edit Project Details" : `Add Project Showcase (${projectsList.length + 1} of 3)`}
+                      </span>
+                      {projectsList.length > 0 && (
+                        <button type="button" onClick={handleCancelProject} className="text-neutral-400 hover:text-neutral-600">
+                          <X className="w-4.5 h-4.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {tempProjectError && (
+                      <div className="text-xs text-red-600 font-semibold p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                        {tempProjectError}
+                      </div>
+                    )}
+
+                    {/* Two-column: Project Name & Demo video URL */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Project Name *</label>
+                        <input
+                          type="text"
+                          placeholder="E.g., DevConnector Social Network"
+                          value={tempProjName}
+                          onChange={(e) => setTempProjName(e.target.value)}
+                          className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                        />
+                      </div>
+                      
+                      {/* Demo Video Switcher & Form Field */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Demo Video *</label>
+                          <div className="flex bg-neutral-200/60 p-0.5 rounded-lg text-[9px] font-bold">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempProjVideoType("link");
+                                setTempProjVideoUrl("");
+                                setTempProjVideoFileName("");
+                              }}
+                              className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                                tempProjVideoType === "link" ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"
+                              }`}
+                            >
+                              Video Link
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempProjVideoType("upload");
+                                setTempProjVideoUrl("");
+                                setTempProjVideoFileName("");
+                              }}
+                              className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                                tempProjVideoType === "upload" ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"
+                              }`}
+                            >
+                              Upload File
+                            </button>
+                          </div>
+                        </div>
+
+                        {tempProjVideoType === "link" ? (
+                          <input
+                            type="url"
+                            placeholder="E.g., YouTube link or direct MP4 link"
+                            value={tempProjVideoUrl}
+                            onChange={(e) => setTempProjVideoUrl(e.target.value)}
+                            className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                          />
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            <div className="border border-dashed border-neutral-350 hover:border-[#ff922b]/50 bg-white p-4 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors relative cursor-pointer text-center">
+                              <Upload className="w-5 h-5 text-[#ff922b]" />
+                              <div className="flex flex-col items-center">
+                                <span className="text-xs font-bold text-neutral-700">Click to upload demo video</span>
+                                <span className="text-[9px] text-neutral-400 font-semibold">Supports MP4, WebM (Max 15MB)</span>
+                              </div>
+                              <input
+                                type="file"
+                                accept="video/*"
+                                className="hidden"
+                                id="video-file-upload-input"
+                                onChange={handleVideoUpload}
+                              />
+                              <label htmlFor="video-file-upload-input" className="absolute inset-0 cursor-pointer" />
+                            </div>
+
+                            {tempProjVideoFileName && (
+                              <div className="flex items-center justify-between p-2.5 rounded-lg border border-neutral-250 bg-white text-xs text-neutral-700 font-semibold">
+                                <div className="flex items-center gap-2 truncate">
+                                  <Play className="w-4 h-4 text-[#ff922b] shrink-0" />
+                                  <span className="truncate font-medium">{tempProjVideoFileName}</span>
+                                </div>
+                                <button 
+                                  onClick={() => { setTempProjVideoUrl(""); setTempProjVideoFileName(""); }}
+                                  className="text-neutral-400 hover:text-neutral-600"
+                                >
+                                  <X className="w-4.5 h-4.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Project Description */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Project Description *</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Describe your project, features, and key challenges solved..."
+                        value={tempProjDesc}
+                        onChange={(e) => setTempProjDesc(e.target.value)}
+                        className="w-full p-4 rounded-xl border border-neutral-350 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 resize-none transition-all"
+                      />
+                    </div>
+
+                    {/* Two-column: GitHub Repo & Live Site URL */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">GitHub Repository URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://github.com/..."
+                          value={tempProjGit}
+                          onChange={(e) => setTempProjGit(e.target.value)}
+                          className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Live Site URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://mysite.com"
+                          value={tempProjLive}
+                          onChange={(e) => setTempProjLive(e.target.value)}
+                          className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tech Stack */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Tech Stack (comma-separated)</label>
+                      <input
+                        type="text"
+                        placeholder="React, Express, TailwindCSS, MongoDB"
+                        value={tempProjStack}
+                        onChange={(e) => setTempProjStack(e.target.value)}
+                        className="w-full h-11 px-4 rounded-xl border border-neutral-350 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                      />
+                    </div>
+
+                    {/* Screenshots gallery */}
+                    <div className="flex flex-col gap-2.5 border-t border-neutral-200/50 pt-5 mt-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700 flex items-center gap-1.5">
+                          <ImageIcon className="w-4 h-4 text-[#ff922b]" /> Project Screenshots ({tempScreenshots.length}/4)
+                        </label>
+                        <span className="text-[10px] text-neutral-400 font-semibold">Attach up to 4 screenshots</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {tempScreenshots.map((src, i) => (
+                          <div key={i} className="relative aspect-video rounded-xl overflow-hidden bg-neutral-900 border border-neutral-300 group">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteScreenshot(i)}
+                              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-500 hover:text-red-400 transition-opacity"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                        
+                        {tempScreenshots.length < 4 && (
+                          <label className="relative aspect-video rounded-xl border-2 border-dashed border-neutral-300 hover:border-[#ff922b]/50 bg-white hover:bg-neutral-50 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-neutral-450 hover:text-neutral-605">
+                            <Upload className="w-5 h-5 text-[#ff922b]" />
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest">Upload</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id="screenshot-upload-input"
+                              onChange={handleScreenshotUpload}
+                            />
+                            <label htmlFor="screenshot-upload-input" className="absolute inset-0 cursor-pointer" />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Save and Cancel project buttons */}
+                    <div className="flex justify-end gap-3 border-t border-neutral-200/40 pt-4 mt-2">
+                      {projectsList.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleCancelProject}
+                          className="px-4 py-2 text-xs font-bold text-neutral-500 hover:text-neutral-800 transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleSaveProject}
+                        className="px-5 py-2 text-xs font-extrabold text-white bg-[#ff922b] hover:bg-[#e8590c] rounded-xl transition-all shadow-md shadow-[#ff922b]/25 active:scale-95 cursor-pointer"
+                      >
+                        Save Project
+                      </button>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* SECTION 3: RESUME, SOCIALS & USERNAME */}
+            <section id="resume-socials" className="scroll-mt-28 transition-all duration-300">
+              <div className="flex flex-col gap-8">
+                <div>
+                  <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#ff922b]" /> Resume & Links
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1">Upload your resume, add social links, and claim your permanent showcase URL.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  
+                  {/* Left sub-column: Resume upload & Social links */}
+                  <div className="flex flex-col gap-6">
+                    
+                    {/* Resume Upload Box */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700 flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-[#ff922b]" /> Resume Link (PDF)
+                      </label>
+                      
+                      <div className="border-2 border-dashed border-neutral-305 bg-neutral-50/50 hover:bg-[#ff922b]/5 p-6 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-colors relative cursor-pointer text-center">
+                        <Upload className="w-7 h-7 text-[#ff922b]" />
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-xs font-bold text-neutral-700">Click or drag PDF resume here</span>
+                          <span className="text-[9px] text-neutral-400 font-semibold">Only PDF format supported (Max 5MB)</span>
+                        </div>
                         <input
                           type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleScreenshotUpload}
+                          accept=".pdf"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={handleFileUpload}
                         />
+                      </div>
+
+                      {resumeFileName && (
+                        <div className="flex items-center gap-3 mt-1.5 p-4 border border-[#ff922b]/15 bg-[#ff922b]/5 rounded-2xl">
+                          {/* Compact Resume Preview: 200px * 120px */}
+                          <div 
+                            onClick={() => setShowResumeViewer(true)}
+                            className="w-[200px] h-[120px] rounded-xl border border-neutral-350 bg-white hover:bg-neutral-50 flex flex-col justify-between shrink-0 cursor-pointer shadow-md hover:border-[#ff922b]/50 group transition-all relative overflow-hidden"
+                          >
+                            <iframe 
+                              src={`${resolveMediaUrl(resumeUrl)}#view=FitH&toolbar=0&navpanes=0&scrollbar=0`} 
+                              className="absolute top-0 left-[-5px] w-[600px] h-[848px] border-0 pointer-events-none select-none" 
+                              style={{ 
+                                transform: "scale(0.35) translateZ(0)", 
+                                transformOrigin: "top left", 
+                                backfaceVisibility: "hidden", 
+                                willChange: "transform",
+                                imageRendering: "-webkit-optimize-contrast"
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 flex items-center justify-center transition-colors">
+                              <span className="bg-[#ff922b] text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity">
+                                View Resume
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col truncate flex-grow">
+                            <span className="text-xs text-neutral-800 font-extrabold truncate">{resumeFileName}</span>
+                            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider cursor-pointer hover:underline" onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = resolveMediaUrl(resumeUrl);
+                              link.setAttribute("download", resumeFileName);
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}>Download PDF</span>
+                          </div>
+
+                          <button 
+                            type="button"
+                            onClick={() => { setResumeFileName(""); setResumeUrl(""); }}
+                            className="px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-50 bg-white border border-red-200 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Delete Resume"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Connect Channels */}
+                    <div className="flex flex-col gap-4 mt-2">
+                      <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-750 flex items-center gap-1.5">
+                        <LinkIcon className="w-4 h-4 text-[#ff922b]" /> Connect Channels
                       </label>
-                    )}
+
+                      {/* LinkedIn */}
+                      <div className="flex flex-col gap-1">
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3.5 text-neutral-400">
+                            <Linkedin className="w-4 h-4 text-[#0077b5]" />
+                          </span>
+                          <input
+                            type="url"
+                            placeholder="https://linkedin.com/in/username"
+                            value={linkedin}
+                            onChange={(e) => setLinkedin(e.target.value)}
+                            className="w-full h-10 pl-11 pr-4 rounded-xl border border-neutral-300 bg-neutral-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      {/* GitHub */}
+                      <div className="flex flex-col gap-1">
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3.5 text-neutral-400">
+                            <Github className="w-4 h-4 text-neutral-800" />
+                          </span>
+                          <input
+                            type="url"
+                            placeholder="https://github.com/username"
+                            value={github}
+                            onChange={(e) => setGithub(e.target.value)}
+                            className="w-full h-10 pl-11 pr-4 rounded-xl border border-neutral-300 bg-neutral-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Twitter */}
+                      <div className="flex flex-col gap-1">
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3.5 text-neutral-400">
+                            <Twitter className="w-4 h-4 text-sky-400" />
+                          </span>
+                          <input
+                            type="url"
+                            placeholder="https://twitter.com/username"
+                            value={twitter}
+                            onChange={(e) => setTwitter(e.target.value)}
+                            className="w-full h-10 pl-11 pr-4 rounded-xl border border-neutral-300 bg-neutral-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] placeholder:text-neutral-400 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* STEP 3: RESUME UPLOAD */}
-          {step === 3 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-400" /> Resume Link
-                </h3>
-                <p className="text-xs text-neutral-400">Upload your PDF resume. Recruiters can view or download it directly from your page.</p>
-              </div>
+                  {/* Right sub-column: Choose Link */}
+                  <div className="flex flex-col gap-5 bg-[#ff922b]/5 border border-[#ff922b]/15 p-6 rounded-2xl shadow-sm">
+                    <div>
+                      <h4 className="text-md font-bold text-neutral-900 flex items-center gap-1.5">
+                        <Globe className="w-4.5 h-4.5 text-[#ff922b]" /> Choose Link Username
+                      </h4>
+                      <p className="text-[11px] text-neutral-500 mt-0.5">Pick a unique name. This forms your permanent portfolio link.</p>
+                    </div>
 
-              <div className="border border-dashed border-white/10 hover:border-blue-500/40 bg-white/5 p-8 rounded-2xl flex flex-col items-center justify-center gap-3 transition-colors relative cursor-pointer">
-                <Upload className="w-8 h-8 text-neutral-400" />
-                <div className="flex flex-col items-center text-center gap-1">
-                  <span className="text-xs font-semibold text-white">Click or drag your PDF resume here</span>
-                  <span className="text-[10px] text-neutral-500">Only PDF formats supported (Max size 5MB)</span>
-                </div>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={handleFileUpload}
-                />
-              </div>
+                    <div className="flex flex-col gap-4 mt-2">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Permanent Username</label>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3.5 text-xs text-neutral-450 font-bold select-none">hire.me/</span>
+                          <input
+                            type="text"
+                            placeholder="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+                            className="w-full h-11 pl-[4.2rem] pr-20 rounded-xl border border-neutral-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#ff922b]/20 focus:border-[#ff922b] font-bold text-neutral-850 placeholder:text-neutral-400"
+                            required
+                          />
+                          {username.length >= 3 && usernameAvailable !== null && (
+                            <span className={`absolute right-3.5 text-[11px] font-bold ${usernameAvailable ? "text-emerald-600" : "text-red-500"}`}>
+                              {usernameAvailable ? "Available" : "Taken"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-              {resumeFileName && (
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-blue-500/15 bg-blue-950/10 text-xs">
-                  <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-blue-450 shrink-0" />
-                    <span className="truncate font-medium text-blue-200">{resumeFileName}</span>
+                      {/* Visual link preview widget */}
+                      <div className="p-4 rounded-xl border border-neutral-200/80 bg-white/70 flex flex-col gap-2 mt-2">
+                        <span className="text-[10px] font-extrabold text-[#ff922b] uppercase tracking-wider">Your Showcase URL Preview</span>
+                        <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-600 truncate bg-neutral-50 p-2.5 rounded-lg border border-neutral-150">
+                          <Globe className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                          <span className="truncate">http://localhost:3000/{username || "username"}</span>
+                        </div>
+                        
+                        <div className="mt-2 text-[10px] text-neutral-400 font-medium flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span>Includes SSL certificate, page analytics, and responsive portfolio theme layout.</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => { setResumeFileName(""); setResumeUrl(""); }}
-                    className="text-neutral-400 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* STEP 4: SOCIAL LINKS */}
-          {step === 4 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <LinkIcon className="w-5 h-5 text-blue-400" /> Connect Channels
-                </h3>
-                <p className="text-xs text-neutral-400">Recruiters can follow your LinkedIn, GitHub, or Twitter links directly.</p>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
-                    <Linkedin className="w-3.5 h-3.5 text-blue-400" /> LinkedIn Profile Link
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://linkedin.com/in/username"
-                    value={linkedin}
-                    onChange={(e) => setLinkedin(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
-                    <Github className="w-3.5 h-3.5 text-neutral-300" /> GitHub Profile Link
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://github.com/username"
-                    value={github}
-                    onChange={(e) => setGithub(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
-                    <Twitter className="w-3.5 h-3.5 text-sky-400" /> Twitter / X Profile Link
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://twitter.com/username"
-                    value={twitter}
-                    onChange={(e) => setTwitter(e.target.value)}
-                    className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                  />
                 </div>
               </div>
-            </div>
-          )}
+            </section>
 
-          {/* STEP 5: CLAIM USERNAME */}
-          {step === 5 && (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-blue-400" /> Choose Link Username
-                </h3>
-                <p className="text-xs text-neutral-400">Pick a unique username. This forms your permanent showcase link.</p>
-              </div>
+          </div>
 
-              <div className="flex flex-col gap-4 mt-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Permanent Username</label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-xs text-neutral-500 font-semibold select-none">hire.me/</span>
-                    <input
-                      type="text"
-                      placeholder="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
-                      className="w-full h-11 pl-20 pr-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50 font-bold"
-                      required
-                    />
-                    {usernameAvailable !== null && (
-                      <span className={`absolute right-3.5 text-xs font-semibold ${usernameAvailable ? "text-emerald-400" : "text-rose-500"}`}>
-                        {usernameAvailable ? "Available" : "Taken"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl border border-white/5 bg-white/5 flex flex-col gap-2 mt-2">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Your Showcase URL</h4>
-                  <div className="text-xs font-mono text-neutral-400">
-                    http://localhost:3000/{username || "username"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Stepper Wizard Controls */}
-        <div className="flex items-center justify-between border-t border-white/5 pt-4">
-          <button
-            onClick={prevStep}
-            disabled={step === 1 || loading}
-            className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400 hover:text-white disabled:opacity-30 disabled:hover:text-neutral-400"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
-          
-          {step < 5 ? (
-            <button
-              onClick={nextStep}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-950 bg-white px-5 py-2.5 rounded-xl hover:bg-neutral-200 active:scale-95 transition-all"
-            >
-              Next <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : (
+          {/* SUBMIT BUTTON */}
+          <div className="mt-14 pt-8 border-t border-neutral-100 flex flex-col items-center">
             <button
               onClick={handleComplete}
-              disabled={loading || !usernameAvailable}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-950 bg-blue-500 text-white px-5 py-2.5 rounded-xl hover:bg-blue-600 active:scale-95 transition-all disabled:opacity-50"
+              disabled={loading || !usernameAvailable || !name.trim() || projectsList.length === 0}
+              className="w-full md:w-80 py-4 px-6 rounded-2xl bg-[#ff922b] hover:bg-[#e8590c] text-white font-extrabold tracking-wider uppercase shadow-lg shadow-[#ff922b]/25 active:scale-[0.98] hover:scale-[1.01] transition-all duration-200 disabled:opacity-50 disabled:hover:bg-[#ff922b] disabled:scale-100 disabled:shadow-none flex items-center justify-center gap-2 cursor-pointer"
             >
-              {loading ? "Generating Link..." : "Generate Link"}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Generating Link...</span>
+                </>
+              ) : (
+                <>
+                  <span>Generate Link</span>
+                </>
+              )}
             </button>
-          )}
+            <span className="text-[10px] text-neutral-450 font-semibold tracking-wider uppercase mt-3">Already a Member? <span className="text-[#ff922b] hover:underline cursor-pointer" onClick={() => router.push("/login")}>Sign In</span></span>
+          </div>
+
         </div>
 
       </div>
+
+      <footer className="w-full py-12 text-center relative z-10">
+        <span className="text-xs text-white/80 font-semibold tracking-wide drop-shadow-sm">
+          Showcase link generated via <span className="font-extrabold text-white">hire.me</span>
+        </span>
+      </footer>
+
+      {/* Lightbox Video Player Modal */}
+      {activeLightboxVideo && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 cursor-pointer animate-fade-in" 
+          onClick={() => setActiveLightboxVideo(null)}
+        >
+          <div 
+            className="relative max-w-4xl w-full aspect-video bg-neutral-950 border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col items-center justify-center cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              className="absolute top-4 right-4 z-50 p-2 text-white bg-black/60 hover:bg-black/80 rounded-xl transition-all cursor-pointer"
+              onClick={() => setActiveLightboxVideo(null)}
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {activeLightboxVideo.startsWith("https://www.youtube.com") || activeLightboxVideo.includes("youtube.com") || activeLightboxVideo.includes("youtu.be") ? (
+              getYoutubeEmbedUrl(activeLightboxVideo) ? (
+                <iframe
+                  src={getYoutubeEmbedUrl(activeLightboxVideo) || ""}
+                  title="Project Video Player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              ) : (
+                <span className="text-white text-sm font-semibold">Invalid YouTube Video Link</span>
+              )
+            ) : (
+              <video
+                src={activeLightboxVideo}
+                controls
+                autoPlay
+                className="w-full h-full object-contain bg-black"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Full Image Modal */}
+      {lightboxImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 cursor-pointer" onClick={() => setLightboxImage(null)}>
+          <div className="relative max-w-5xl max-h-[85vh] w-full flex flex-col items-center justify-center gap-4" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="absolute -top-12 right-0 px-4 py-2 text-white hover:bg-white/10 font-bold text-xs uppercase bg-white/5 border border-white/10 rounded-xl transition-all cursor-pointer"
+              onClick={() => setLightboxImage(null)}
+            >
+              Close
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={lightboxImage} alt="Screenshot Preview" className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-white/15 shadow-2xl" />
+          </div>
+        </div>
+      )}
+
+      {/* Scrollable PDF Resume Viewer Modal */}
+      {showResumeViewer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 cursor-pointer" onClick={() => setShowResumeViewer(false)}>
+          <div 
+            className="relative max-w-4xl w-full h-[85vh] bg-neutral-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col cursor-default animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-neutral-950/40">
+              <span className="text-sm font-extrabold uppercase tracking-wider text-neutral-305">Resume Viewer</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = resolveMediaUrl(resumeUrl);
+                    link.setAttribute("download", resumeFileName || "resume.pdf");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-neutral-955 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer bg-[#ff922b]"
+                >
+                  <FileText className="w-3.5 h-3.5" /> Download PDF
+                </button>
+                <button 
+                  className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                  onClick={() => setShowResumeViewer(false)}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body with Embed/Iframe */}
+            <div className="flex-grow w-full h-full relative bg-neutral-950">
+              {/* Fallback load screen */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 bg-neutral-955 text-neutral-405 -z-10">
+                <FileText className="w-10 h-10 text-neutral-600 animate-pulse" />
+                <span className="text-xs font-bold tracking-widest uppercase">Loading Resume PDF Preview...</span>
+                <button
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = resolveMediaUrl(resumeUrl);
+                    link.setAttribute("download", resumeFileName || "resume.pdf");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="mt-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Download PDF Instead
+                </button>
+              </div>
+              
+              <iframe 
+                src={resolveMediaUrl(resumeUrl)} 
+                title="Resume Preview" 
+                className="w-full h-full border-0 relative z-10"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
+  );
+}
+
+export default function Onboarding() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#ffdca3] via-[#ff9c50] to-[#e8590c] flex items-center justify-center text-white select-none">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-semibold tracking-widest uppercase text-white/85">Loading Setup...</span>
+        </div>
+      </div>
+    }>
+      <OnboardingForm />
+    </Suspense>
   );
 }

@@ -104,7 +104,16 @@ export interface User {
 }
 
 // Helpers for API communication
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
+export const resolveMediaUrl = (url?: string): string => {
+  if (!url) return "";
+  if (url.startsWith("/api/")) {
+    const apiBase = BACKEND_URL.replace("/api/v1", "");
+    return `${apiBase}${url}`;
+  }
+  return url;
+};
 
 const getHeaders = () => {
   const headers: Record<string, string> = {

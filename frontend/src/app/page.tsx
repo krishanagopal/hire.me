@@ -287,7 +287,7 @@ export default function Home() {
               Login
             </Link>
             <Link 
-              href="/register"
+              href="/onboarding"
               className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-black text-white hover:bg-neutral-800 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
             >
               Get Started
@@ -320,7 +320,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-4 mt-2 w-full">
             <Link 
-              href="/register"
+              href="/onboarding"
               className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-neutral-950 font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-white/10 active:scale-95 text-center flex items-center justify-center animate-pulse-subtle"
             >
               Create My hire.me Link
@@ -618,7 +618,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <Link href="/register" className="h-11 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-xs hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center">
+              <Link href="/onboarding" className="h-11 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-xs hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center">
                 Get Started
               </Link>
             </div>
@@ -643,7 +643,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <Link href="/register" className="h-11 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-100 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-white/5">
+              <Link href="/onboarding" className="h-11 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-100 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-white/5">
                 Go Pro Now
               </Link>
             </div>
@@ -677,7 +677,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-2 w-full justify-center">
               <Link 
-                href="/register"
+                href="/onboarding"
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-neutral-950 font-extrabold text-sm hover:scale-105 transition-all shadow-lg shadow-white/10 active:scale-95 text-center flex items-center justify-center"
               >
                 Create My hire.me Link

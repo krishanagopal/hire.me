@@ -104,7 +104,7 @@ export default function WhyUsPage() {
               Login
             </Link>
             <Link 
-              href="/register"
+              href="/onboarding"
               className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-black text-white hover:bg-neutral-800 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
             >
               Get Started

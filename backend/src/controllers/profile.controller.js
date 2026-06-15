@@ -175,6 +175,20 @@ const updateMyProfile = async (req, res) => {
       tier,
     } = req.body;
 
+    // Before updating, collect all media URLs currently stored to clean up replaced ones
+    const { processBase64Field, deleteMediaById, extractMediaIdFromUrl } = require("../utils/mediaStorage");
+    const oldProjects = await Project.find({ profile: profile._id });
+    const oldMediaUrls = [];
+    if (profile.avatarUrl) oldMediaUrls.push(profile.avatarUrl);
+    if (profile.resumeUrl) oldMediaUrls.push(profile.resumeUrl);
+    oldProjects.forEach(op => {
+      if (op.demoVideoUrl) oldMediaUrls.push(op.demoVideoUrl);
+      if (op.screenshots && op.screenshots.length > 0) {
+        oldMediaUrls.push(...op.screenshots);
+      }
+    });
+    const oldMediaIds = oldMediaUrls.map(extractMediaIdFromUrl).filter(Boolean);
+
     // Update Profile Fields
     const finalFullName = fullName || req.body.name;
     if (finalFullName) profile.fullName = finalFullName;
@@ -185,9 +199,14 @@ const updateMyProfile = async (req, res) => {
     if (email) profile.email = email;
     if (phone !== undefined) profile.phone = phone;
     if (availabilityStatus !== undefined) profile.availabilityStatus = availabilityStatus;
-    if (avatarUrl !== undefined) profile.avatarUrl = avatarUrl;
+    
+    if (avatarUrl !== undefined) {
+      profile.avatarUrl = await processBase64Field(avatarUrl, profile.avatarUrl, `${profile.username}_avatar`);
+    }
     if (bannerUrl !== undefined) profile.bannerUrl = bannerUrl;
-    if (resumeUrl !== undefined) profile.resumeUrl = resumeUrl;
+    if (resumeUrl !== undefined) {
+      profile.resumeUrl = await processBase64Field(resumeUrl, profile.resumeUrl, resumeFileName || `${profile.username}_resume.pdf`);
+    }
     if (resumeFileName !== undefined) profile.resumeFileName = resumeFileName;
     if (tier !== undefined) profile.tier = tier;
 
@@ -219,20 +238,52 @@ const updateMyProfile = async (req, res) => {
     if (projects && Array.isArray(projects)) {
       await Project.deleteMany({ profile: profile._id });
       if (projects.length > 0) {
-        const projectsToInsert = projects.map(p => ({
-          profile: profile._id,
-          name: p.name,
-          description: p.description,
-          techStack: p.techStack,
-          githubUrl: p.githubUrl,
-          liveUrl: p.liveUrl,
-          demoVideoUrl: p.demoVideoUrl,
-          thumbnailUrl: p.thumbnailUrl,
-          screenshots: p.screenshots || [],
-          isFeatured: p.isFeatured || false,
-        }));
+        const projectsToInsert = [];
+        for (const p of projects) {
+          const processedVideoUrl = await processBase64Field(p.demoVideoUrl, null, `${p.name}_video`);
+          
+          const processedScreenshots = [];
+          if (p.screenshots && Array.isArray(p.screenshots)) {
+            for (let sIdx = 0; sIdx < p.screenshots.length; sIdx++) {
+              const screen = p.screenshots[sIdx];
+              const processedScreen = await processBase64Field(screen, null, `${p.name}_screenshot_${sIdx}`);
+              processedScreenshots.push(processedScreen);
+            }
+          }
+
+          projectsToInsert.push({
+            profile: profile._id,
+            name: p.name,
+            description: p.description || "No description provided",
+            techStack: p.techStack,
+            githubUrl: p.githubUrl,
+            liveUrl: p.liveUrl,
+            demoVideoUrl: processedVideoUrl,
+            thumbnailUrl: p.thumbnailUrl,
+            screenshots: processedScreenshots,
+            isFeatured: p.isFeatured || false,
+          });
+        }
         await Project.insertMany(projectsToInsert);
       }
+    }
+
+    // After updating, find all new media URLs stored and delete unreferenced old ones
+    const newProjects = await Project.find({ profile: profile._id });
+    const newMediaUrls = [];
+    if (profile.avatarUrl) newMediaUrls.push(profile.avatarUrl);
+    if (profile.resumeUrl) newMediaUrls.push(profile.resumeUrl);
+    newProjects.forEach(np => {
+      if (np.demoVideoUrl) newMediaUrls.push(np.demoVideoUrl);
+      if (np.screenshots && np.screenshots.length > 0) {
+        newMediaUrls.push(...np.screenshots);
+      }
+    });
+    const newMediaIds = newMediaUrls.map(extractMediaIdFromUrl).filter(Boolean);
+
+    const idsToDelete = oldMediaIds.filter(id => !newMediaIds.includes(id));
+    for (const id of idsToDelete) {
+      await deleteMediaById(id);
     }
 
     // 4. Sync Experiences if supplied
@@ -357,10 +408,45 @@ const getPublicProfile = async (req, res) => {
   }
 };
 
+// GET Media stream/file by ID
+const getMediaFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const Media = require("../models/Media");
+    const MediaChunk = require("../models/MediaChunk");
+
+    const media = await Media.findById(id);
+    if (!media) {
+      return res.status(404).json({ success: false, message: "Media file not found" });
+    }
+
+    const chunks = await MediaChunk.find({ media: id }).sort({ chunkIndex: 1 });
+    if (!chunks || chunks.length === 0) {
+      return res.status(404).json({ success: false, message: "Media file has no content chunks" });
+    }
+
+    const fullBase64 = chunks.map((c) => c.data).join("");
+    const buffer = Buffer.from(fullBase64, "base64");
+
+    res.setHeader("Content-Type", media.contentType);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+
+    if (media.contentType === "application/pdf") {
+      res.setHeader("Content-Disposition", `inline; filename="${media.filename}"`);
+    }
+
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Get Media File Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to stream media file", error: error.message });
+  }
+};
+
 module.exports = {
   checkUsername,
   claimUsername,
   getMyProfile,
   updateMyProfile,
   getPublicProfile,
+  getMediaFile,
 };

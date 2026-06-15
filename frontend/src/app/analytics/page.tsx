@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
               Login
             </Link>
             <Link 
-              href="/register"
+              href="/onboarding"
               className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-black text-white hover:bg-neutral-800 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
             >
               Get Started
@@ -319,7 +319,7 @@ export default function AnalyticsPage() {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 w-full md:w-auto">
             <Link 
-              href="/register"
+              href="/onboarding"
               className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-all text-center"
             >
               Get Started Free

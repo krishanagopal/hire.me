@@ -106,7 +106,7 @@ export default function PublicProfile({ params }: PageProps) {
           </div>
           <div className="w-full flex flex-col gap-3.5 mt-2">
             <Link 
-              href={`/register?claim=${username}`}
+              href={`/onboarding?claim=${username}`}
               className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-white via-neutral-300 to-neutral-600 text-neutral-950 font-bold text-sm shadow-xl shadow-neutral-500/10 hover:brightness-110 active:scale-98 transition-all"
             >
               <Sparkles className="w-4 h-4 text-neutral-950" /> Claim hire.me/{username}
