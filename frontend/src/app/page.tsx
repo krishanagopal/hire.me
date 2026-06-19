@@ -19,6 +19,7 @@ export default function Home() {
   
   // Custom interactive landing page states
   const [showDemoNotification, setShowDemoNotification] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
 
 
@@ -130,9 +131,20 @@ export default function Home() {
   }, []);
 
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
-    setIsLoggedIn(!!apiMock.getCurrentUser());
+    const checkAuth = async () => {
+      const user = await apiMock.getCurrentUser();
+      if (user) {
+        setIsLoggedIn(true);
+        setCurrentUser(user);
+      } else {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+      }
+    };
+    checkAuth();
 
     const handleScroll = () => {
       if (window.scrollY > 20) {
@@ -215,9 +227,9 @@ export default function Home() {
         <div 
           className="absolute inset-0 w-full h-full bg-cover bg-center"
           style={{ 
-            backgroundImage: "url('/Gemini_Generated_Image_fl7uqwfl7uqwfl7u.png')",
-            filter: "contrast(1.02) saturate(1.02) brightness(1.3) blur(0px)",
-            opacity: 0.65,
+            backgroundImage: "url('/samurai_bg.jpg')",
+            filter: "contrast(1.05) saturate(1.1) brightness(0.9) blur(0px)",
+            opacity: 0.85,
           }}
         />
         
@@ -229,50 +241,50 @@ export default function Home() {
         </div>
 
         {/* Cinematic readability gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/50 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70 pointer-events-none" />
         
         {/* Left-side dark radial shadow specifically under the hero text for maximum legibility */}
-        <div className="absolute top-[5%] left-[-15%] w-[70%] h-[75%] bg-black/35 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-[5%] left-[-15%] w-[70%] h-[75%] bg-black/40 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
       {/* Unified Dynamic Navigation Bar */}
-      <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
-        isScrolled 
-          ? "bg-white/85 backdrop-blur-md border-b border-black/10 py-1.5 shadow-md" 
-          : "bg-white/70 backdrop-blur-md border-b border-black/5 py-2.5 shadow-sm"
+      <header className={`fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-300 ${
+        isScrolled || isMobileMenuOpen
+          ? "bg-black/80 backdrop-blur-xl border-b border-white/10 py-3 md:py-2 text-white shadow-2xl" 
+          : "bg-transparent py-4 text-white"
       }`}>
         <div className="relative max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
           <Link 
             href="/" 
-            className="font-serif text-3xl tracking-normal text-black hover:text-neutral-800 transition-colors duration-300"
+            className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
             hire.me
           </Link>
 
           {/* Centered Menu Links */}
-          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-[14px] font-extrabold uppercase tracking-widest transition-colors duration-300 text-black/80">
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-[14px] font-extrabold uppercase tracking-widest text-white/90 transition-colors duration-300">
             <a 
               href="#pricing" 
-              className="transition-colors duration-300 hover:text-black"
+              className="hover:text-white transition-colors duration-300"
             >
               Pricing
             </a>
             <Link 
               href="/why-us" 
-              className="transition-colors duration-300 hover:text-black"
+              className="hover:text-white transition-colors duration-300"
             >
               Why Us
             </Link>
             <Link 
               href="/faq" 
-              className="transition-colors duration-300 hover:text-black"
+              className="hover:text-white transition-colors duration-300"
             >
               FAQ
             </Link>
             <Link 
-              href="/analytics" 
-              className="transition-colors duration-300 hover:text-black"
+              href={currentUser?.onboardingCompleted ? "/dashboard" : "/onboarding"} 
+              className="hover:text-white transition-colors duration-300"
             >
               Analytics
             </Link>
@@ -280,67 +292,247 @@ export default function Home() {
 
           {/* Actions (Login & Get Started) */}
           <div className="flex items-center gap-4">
-            <Link 
-              href={isLoggedIn ? "/dashboard" : "/login"}
-              className="hidden sm:block text-[14px] font-extrabold uppercase tracking-widest text-black/80 hover:text-black transition-colors duration-300"
-            >
-              Login
-            </Link>
-            <Link 
-              href="/onboarding"
-              className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-black text-white hover:bg-neutral-800 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
-            >
-              Get Started
-            </Link>
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-4">
+              {isLoggedIn ? (
+                <>
+                  <button 
+                    onClick={async () => {
+                      await apiMock.logout();
+                      setIsLoggedIn(false);
+                      setCurrentUser(null);
+                    }}
+                    className="text-[14px] font-extrabold uppercase tracking-widest text-white/80 hover:text-white cursor-pointer transition-colors duration-300"
+                  >
+                    Logout
+                  </button>
+                  {currentUser?.onboardingCompleted ? (
+                    <Link 
+                      href="/dashboard"
+                      className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md"
+                    >
+                      Dashboard
+                    </Link>
+                  ) : (
+                    <Link 
+                      href="/onboarding"
+                      className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md"
+                    >
+                      Get Started
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/login" 
+                    className="text-[14px] font-extrabold uppercase tracking-widest text-white/80 hover:text-white transition-colors duration-300"
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    href="/signup"
+                    className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <div className="md:hidden flex items-center">
+              {isLoggedIn ? (
+                <button 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="w-11 h-11 rounded-full bg-neutral-800/80 border border-white/10 flex items-center justify-center text-white focus:outline-none hover:bg-neutral-700 transition-colors"
+                  aria-label="Toggle user menu"
+                >
+                  <User className="w-5 h-5 text-neutral-300" />
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="w-11 h-11 flex items-center justify-center text-white/80 hover:text-white focus:outline-none"
+                  aria-label="Toggle mobile menu"
+                >
+                  <div className="space-y-1.5 flex flex-col items-center justify-center w-full h-full">
+                    <span className={`block w-6 h-[2px] bg-current transition-all duration-300 ${isMobileMenuOpen ? "rotate-45 translate-y-[8px]" : ""}`}></span>
+                    <span className={`block w-6 h-[2px] bg-current transition-all duration-300 ${isMobileMenuOpen ? "opacity-0" : ""}`}></span>
+                    <span className={`block w-6 h-[2px] bg-current transition-all duration-300 ${isMobileMenuOpen ? "-rotate-45 -translate-y-[8px]" : ""}`}></span>
+                  </div>
+                </button>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Mobile Dropdown Menu Drawer */}
+        <div 
+          className={`absolute top-full left-0 right-0 w-full md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-[500px] opacity-100 visible" : "max-h-0 opacity-0 invisible"}`}
+        >
+          <div className="relative z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/10 px-6 py-6 shadow-2xl flex flex-col gap-2">
+            {isLoggedIn ? (
+              <>
+                <Link 
+                  href={currentUser?.onboardingCompleted ? "/dashboard" : "/onboarding"} 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex items-center h-12 text-lg font-semibold text-white/90 hover:text-white active:bg-white/5 rounded-lg px-3 transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/settings" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex items-center h-12 text-lg font-semibold text-white/90 hover:text-white active:bg-white/5 rounded-lg px-3 transition-colors"
+                >
+                  Settings
+                </Link>
+                <div className="h-[1px] w-full bg-white/10 my-2" />
+                <button 
+                  onClick={async () => {
+                    await apiMock.logout();
+                    setIsLoggedIn(false);
+                    setCurrentUser(null);
+                    setIsMobileMenuOpen(false);
+                  }} 
+                  className="flex items-center h-12 text-lg font-semibold text-rose-400 hover:text-rose-300 active:bg-rose-500/10 rounded-lg px-3 text-left transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="#what-recruiters-see" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center h-12 text-[15px] font-bold tracking-wide uppercase text-white/80 active:bg-white/5 rounded-lg px-3">Recruiters View</Link>
+                <Link href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center h-12 text-[15px] font-bold tracking-wide uppercase text-white/80 active:bg-white/5 rounded-lg px-3">Pricing</Link>
+                <Link href="/why-us" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center h-12 text-[15px] font-bold tracking-wide uppercase text-white/80 active:bg-white/5 rounded-lg px-3">Why Us</Link>
+                <Link href="/faq" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center h-12 text-[15px] font-bold tracking-wide uppercase text-white/80 active:bg-white/5 rounded-lg px-3">FAQ</Link>
+                <div className="h-[1px] w-full bg-white/10 my-3" />
+                <div className="flex flex-col gap-3 px-3">
+                  <Link 
+                    href="/login" 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className="flex items-center justify-center h-12 rounded-xl border border-white/20 bg-transparent text-white font-bold text-base hover:bg-white/5 active:scale-[0.98] transition-all"
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    href="/signup" 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className="flex items-center justify-center h-12 rounded-xl bg-white text-neutral-950 font-bold text-base shadow-lg shadow-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Backdrop for outside click */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 top-[72px] bg-black/60 backdrop-blur-sm z-[90] md:hidden animate-in fade-in duration-300" 
+            onClick={() => setIsMobileMenuOpen(false)} 
+          />
+        )}
       </header>
 
       {/* 1. HERO SECTION */}
       <section 
         id="hero-section"
-        className="relative z-10 min-h-screen flex items-center justify-start px-6 md:px-12 lg:px-24 pt-28 pb-16 max-w-7xl mx-auto w-full"
+        className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-start md:min-h-screen px-6 md:px-12 lg:px-24 pt-[96px] md:pt-32 pb-[48px] md:pb-24 w-full max-w-7xl mx-auto"
       >
-        <div className="flex flex-col items-start text-left gap-6 w-full max-w-2xl">
-          <div className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-bold text-neutral-100 text-shadow-sub">
+        <div className="flex flex-col items-start text-left gap-6 w-full max-w-2xl mx-auto md:mx-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {/* Mobile Badge */}
+          <div className="md:hidden inline-flex items-center gap-2 text-[11px] tracking-widest uppercase font-bold text-neutral-100 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm shadow-xl shadow-black/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse" />
+            <span>One Link. Everything You Need.</span>
+          </div>
+
+          {/* Desktop Badge */}
+          <div className="hidden md:inline-flex items-center gap-2 text-xs tracking-widest uppercase font-bold text-neutral-100 text-shadow-sub">
             <span className="w-6 h-[1px] bg-[#dc2626]" />
             <span>One Link. Everything You Need.</span>
           </div>
-          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-tight text-white">
+
+          {/* Mobile Title */}
+          <h1 className="md:hidden font-extrabold tracking-tight text-white leading-[1.1] text-[clamp(2.25rem,8vw,4rem)]">
+            <span className="text-shadow-hero">Your Entire</span><br />
+            <span className="text-shadow-hero">Professional Identity.</span><br />
+            <span className="bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
+              One Link.
+            </span>
+          </h1>
+
+          {/* Desktop Title */}
+          <h1 className="hidden md:block text-4xl md:text-7xl font-extrabold tracking-tight leading-tight text-white">
             <span className="text-shadow-hero">Your Entire</span><br />
             <span className="text-shadow-hero">Professional</span><br />
             <span className="bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
               Identity. One Link.
             </span>
           </h1>
-          <p className="text-base md:text-lg text-neutral-200 leading-relaxed font-medium text-shadow-sub">
+          
+          {/* Mobile Content */}
+          <div className="md:hidden flex flex-col gap-3 mt-1 text-base text-neutral-200 font-medium">
+            <ul className="flex flex-col gap-3">
+              {['Resume', 'GitHub', 'LinkedIn', 'Demo Videos', 'Project Screenshots'].map((item) => (
+                <li key={item} className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-base text-neutral-300 leading-[1.5] font-medium text-shadow-sub max-w-md mt-2">
+              Everything recruiters need to evaluate you in under 60 seconds.
+            </p>
+          </div>
+
+          {/* Desktop Content */}
+          <p className="hidden md:block text-base md:text-lg text-neutral-200 leading-relaxed font-medium text-shadow-sub">
             Resumes tell recruiters what you've done. <strong>Hire.me shows them.</strong> Consolidate your LinkedIn, GitHub, and best projects into a single, interactive link.
             <br /><br />
             Let hiring teams play demo videos, view screenshots, and download your resume instantly. No scattered tabs. Just proof.
           </p>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-4 mt-2 w-full">
-            <Link 
-              href="/onboarding"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-neutral-950 font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-white/10 active:scale-95 text-center flex items-center justify-center animate-pulse-subtle"
-            >
-              Create My hire.me Link
-            </Link>
-            <Link 
-              href="/templates"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-semibold text-sm hover:bg-white/10 transition-all active:scale-95 text-center flex items-center justify-center animate-pulse-subtle"
-            >
-              View Templates
-            </Link>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-[16px] mt-4 w-full">
+            {!currentUser?.onboardingCompleted ? (
+              <Link 
+                href={isLoggedIn ? "/onboarding" : "/signup"}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-neutral-950 font-bold text-base hover:scale-[1.02] transition-transform shadow-xl shadow-white/10 active:scale-[0.98] text-center flex items-center justify-center"
+              >
+                Create My hire.me Link
+              </Link>
+            ) : (
+              <>
+                <Link 
+                  href={`/${currentUser.username}`}
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-neutral-950 font-bold text-base hover:scale-[1.02] transition-transform shadow-xl shadow-white/10 active:scale-[0.98] text-center flex items-center justify-center"
+                >
+                  View Your Link
+                </Link>
+                <Link 
+                  href="/dashboard?tab=share"
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-base hover:bg-white/10 transition-colors active:scale-[0.98] text-center flex items-center justify-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" /> Share Link
+                </Link>
+              </>
+            )}
           </div>
           {/* glowing url preview */}
-          <div className="mt-4 flex items-center gap-2.5 text-shadow-sub">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-mono text-neutral-400">
-              Core link: <strong className="text-white hover:underline cursor-pointer">hire.me/alex</strong>
+          <div className="mt-2 flex items-center gap-2.5 text-shadow-sub">
+            <span className="text-sm font-mono text-neutral-400">
+              hire.me/<strong className="text-white hover:underline cursor-pointer">alex</strong>
             </span>
           </div>
         </div>
       </section>
+
+
 
       {/* 2. SOCIAL PROOF SECTION */}
       <section 
@@ -354,7 +546,32 @@ export default function Home() {
               Whether you're applying for jobs, networking at events, seeking freelance opportunities, or building your professional brand, hire.me helps you present yourself professionally with a single shareable link.
             </p>
           </div>
-          <div className="fanned-card-container max-w-6xl mx-auto mt-12 text-left">
+          {/* Desktop Bullet Points */}
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-12 text-left w-full">
+            {[
+              { role: "Software Developers", desc: "Showcase github repos, tech stacks, and terminal portfolio layouts.", icon: <Code className="w-5 h-5" /> },
+              { role: "Students & Graduates", desc: "Present academic papers, projects, and internships.", icon: <GraduationCap className="w-5 h-5" /> },
+              { role: "Designers & Creatives", desc: "Display high-fidelity Figma designs and visual portfolios.", icon: <Palette className="w-5 h-5" /> },
+              { role: "Product Managers", desc: "Highlight product roadmaps, user growth, and key metrics.", icon: <Presentation className="w-5 h-5" /> },
+              { role: "Freelancers & Agencies", desc: "Centralize client testimonials, services offered, and active booking availability.", icon: <Briefcase className="w-5 h-5" /> },
+              { role: "Startup Founders", desc: "Share company pitch decks, vision, founder bio, funding history, and advisor board details.", icon: <Rocket className="w-5 h-5" /> }
+            ].map((audience) => (
+              <div key={audience.role} className="flex flex-col gap-3 p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
+                    {audience.icon}
+                  </div>
+                  <h3 className="text-base font-bold text-white">{audience.role}</h3>
+                </div>
+                <p className="text-sm text-neutral-300 leading-relaxed">
+                  {audience.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Fanned Cards */}
+          <div className="md:!hidden fanned-card-container max-w-6xl mx-auto mt-12 text-left">
             {[
               { role: "Software Developers", desc: "Showcase github repos, tech stacks, and terminal portfolio layouts.", icon: <Code className="w-5 h-5" /> },
               { role: "Students & Graduates", desc: "Present academic papers, projects, and internships.", icon: <GraduationCap className="w-5 h-5" /> },
@@ -365,7 +582,7 @@ export default function Home() {
             ].map((audience) => (
               <div 
                 key={audience.role}
-                className="fanned-card relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/80 backdrop-blur-md p-6 flex flex-col justify-between group cursor-pointer transition-all duration-500 hover:border-white/30 hover:bg-neutral-950/90 hover:shadow-2xl hover:shadow-black/60"
+                className="fanned-card relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/40 backdrop-blur-md p-6 flex flex-col justify-between group cursor-pointer transition-all duration-500 hover:border-white/30 hover:bg-neutral-950/50 hover:shadow-2xl hover:shadow-black/60"
               >
                 {/* Top Row / Icon */}
                 <div className="relative z-10 flex justify-between items-start">
@@ -475,8 +692,8 @@ export default function Home() {
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-12 items-center text-center">
           <div className="flex flex-col gap-3 max-w-xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-neutral-900">Offline Networking Meets Digital</h2>
-            <p className="text-sm text-neutral-700 font-semibold">Scan codes and exchange details instantly at meetups, events, or on printouts.</p>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">Offline Networking Meets Digital</h2>
+            <p className="text-sm text-white/90 font-semibold">Scan codes and exchange details instantly at meetups, events, or on printouts.</p>
           </div>
 
           <div className="p-6 rounded-3xl border border-white/5 bg-neutral-950/50 backdrop-blur-md max-w-md flex flex-col items-center gap-5">
@@ -559,8 +776,8 @@ export default function Home() {
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-14 text-center">
           <div className="flex flex-col gap-3 max-w-xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-neutral-900">Professionals Love hire.me</h2>
-            <p className="text-sm text-neutral-700 font-semibold">See how developers, managers, and designers land roles with their profile links.</p>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">Professionals Love hire.me</h2>
+            <p className="text-sm text-neutral-300 font-semibold">See how developers, managers, and designers land roles with their profile links.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
@@ -618,7 +835,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <Link href="/onboarding" className="h-11 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-xs hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center">
+              <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="h-11 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-xs hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center">
                 Get Started
               </Link>
             </div>
@@ -708,7 +925,7 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider">
             <Link href="/why-us" className="hover:text-white transition-colors">Why Us</Link>
             <Link href="/faq" className="hover:text-white transition-colors">FAQ</Link>
-            <Link href="/analytics" className="hover:text-white transition-colors">Analytics</Link>
+            <Link href={currentUser?.onboardingCompleted ? "/dashboard" : "/onboarding"} className="hover:text-white transition-colors">Analytics</Link>
             <a href="/#pricing" className="hover:text-white transition-colors">Pricing</a>
           </div>
         </div>
