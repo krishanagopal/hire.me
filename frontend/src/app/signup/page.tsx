@@ -22,10 +22,11 @@ const GithubIcon = () => (
   </svg>
 );
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const triggerOAuth = async (provider: "google" | "github") => {
     try {
@@ -92,7 +93,7 @@ export default function LoginPage() {
               <div className="w-8.5 h-8.5 rounded-full bg-[#dc2626] flex items-center justify-center font-bold text-sm text-white shadow-sm">S</div>
               <div className="flex flex-col text-left">
                 <span className="text-xs font-bold text-neutral-900">samurai.dev</span>
-                <span className="text-[10px] text-neutral-500 font-semibold">Candidate Eval</span>
+                <span className="text-[10px] text-neutral-500 font-semibold">Join Dojo</span>
               </div>
             </div>
           </div>
@@ -109,11 +110,11 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-1.5 mb-8 text-left">
             <h2 className="text-3xl font-extrabold tracking-tight text-neutral-950">
-              Hi Developer
+              Create account
             </h2>
             <span className="text-xs text-neutral-500 uppercase font-extrabold tracking-wider flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse"></span>
-              Enter the Dojo of Candidate Evaluation
+              Begin your journey here
             </span>
           </div>
 

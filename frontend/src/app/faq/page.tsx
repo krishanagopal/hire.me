@@ -7,11 +7,17 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function FAQPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(0); // Keep first one open by default
 
   useEffect(() => {
-    setIsLoggedIn(!!apiMock.getCurrentUser());
+    const checkAuth = async () => {
+      const user = await apiMock.getCurrentUser();
+      setIsLoggedIn(!!user);
+      setCurrentUser(user);
+    };
+    checkAuth();
 
     const handleScroll = () => {
       if (window.scrollY > 20) {
@@ -56,13 +62,14 @@ export default function FAQPage() {
     <div className="relative min-h-screen w-full text-white bg-transparent select-none">
       
       {/* Pinned Cinematic Background Image */}
+      {/* Pinned Cinematic Background Image */}
       <div className="fixed inset-0 w-screen h-screen z-0 overflow-hidden bg-[#030304]">
         <div 
           className="absolute inset-0 w-full h-full bg-cover bg-center"
           style={{ 
-            backgroundImage: "url('/Gemini_Generated_Image_fl7uqwfl7uqwfl7u.png')",
-            filter: "contrast(1.02) saturate(1.02) brightness(1.3) blur(0px)",
-            opacity: 0.65,
+            backgroundImage: "url('/samurai_bg.jpg')",
+            filter: "contrast(1.05) saturate(1.1) brightness(0.9) blur(0px)",
+            opacity: 0.85,
           }}
         />
         
@@ -74,69 +81,91 @@ export default function FAQPage() {
         </div>
 
         {/* Cinematic readability gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/50 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70 pointer-events-none" />
         
-        {/* Left-side dark radial shadow for legibility */}
-        <div className="absolute top-[5%] left-[-15%] w-[70%] h-[75%] bg-black/35 rounded-full blur-[140px] pointer-events-none" />
+        {/* Left-side dark radial shadow specifically under the hero text for maximum legibility */}
+        <div className="absolute top-[5%] left-[-15%] w-[70%] h-[75%] bg-black/40 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
-      {/* Unified Navigation Bar */}
+      {/* Unified Dynamic Navigation Bar */}
       <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
         isScrolled 
-          ? "bg-white/85 backdrop-blur-md border-b border-black/10 py-1.5 shadow-md" 
-          : "bg-white/70 backdrop-blur-md border-b border-black/5 py-2.5 shadow-sm"
+          ? "bg-black/40 backdrop-blur-md py-2 text-white" 
+          : "bg-transparent py-4 text-white"
       }`}>
         <div className="relative max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
           <Link 
             href="/" 
-            className="font-serif text-3xl tracking-normal text-black hover:text-neutral-800 transition-colors duration-300"
+            className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
             hire.me
           </Link>
 
           {/* Centered Menu Links */}
-          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-[14px] font-extrabold uppercase tracking-widest transition-colors duration-300 text-black/80">
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-[14px] font-extrabold uppercase tracking-widest text-white/90 transition-colors duration-300">
             <Link 
               href="/#pricing" 
-              className="transition-colors duration-300 hover:text-black"
+              className="hover:text-white transition-colors duration-300"
             >
               Pricing
             </Link>
             <Link 
               href="/why-us" 
-              className="transition-colors duration-300 hover:text-black"
+              className="hover:text-white transition-colors duration-300"
             >
               Why Us
             </Link>
             <Link 
               href="/faq" 
-              className="transition-colors duration-300 text-black font-black"
+              className="text-white font-black transition-colors duration-300"
             >
               FAQ
             </Link>
             <Link 
-              href="/analytics" 
-              className="transition-colors duration-300 hover:text-black"
+              href={currentUser?.onboardingCompleted ? "/dashboard" : "/onboarding"} 
+              className="hover:text-white transition-colors duration-300"
             >
               Analytics
             </Link>
           </div>
 
-          {/* Actions */}
+          {/* Actions (Login & Get Started) */}
           <div className="flex items-center gap-4">
-            <Link 
-              href={isLoggedIn ? "/dashboard" : "/login"}
-              className="hidden sm:block text-[14px] font-extrabold uppercase tracking-widest text-black/80 hover:text-black transition-colors duration-300"
-            >
-              Login
-            </Link>
-            <Link 
-              href="/onboarding"
-              className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-black text-white hover:bg-neutral-800 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
-            >
-              Get Started
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <button 
+                  onClick={async () => {
+                    await apiMock.logout();
+                    setIsLoggedIn(false);
+                  }}
+                  className="hidden sm:block text-[14px] font-extrabold uppercase tracking-widest text-white/80 hover:text-white cursor-pointer transition-colors duration-300"
+                >
+                  Logout
+                </button>
+                <Link 
+                  href="/dashboard"
+                  className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
+                >
+                  Dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/login"
+                  className="hidden sm:block text-[14px] font-extrabold uppercase tracking-widest text-white/80 hover:text-white transition-colors duration-300"
+                >
+                  Login
+                </Link>
+                <Link 
+                  href="/signup"
+                  className="h-7 px-4 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all duration-300 hover:scale-105 active:scale-95 text-center flex items-center justify-center shadow-md font-bold"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -209,7 +238,7 @@ export default function FAQPage() {
           <div className="flex flex-wrap justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider">
             <Link href="/why-us" className="hover:text-white transition-colors">Why Us</Link>
             <Link href="/faq" className="hover:text-white transition-colors">FAQ</Link>
-            <Link href="/analytics" className="hover:text-white transition-colors">Analytics</Link>
+            <Link href={currentUser?.onboardingCompleted ? "/dashboard" : "/onboarding"} className="hover:text-white transition-colors">Analytics</Link>
             <a href="/#pricing" className="hover:text-white transition-colors">Pricing</a>
           </div>
         </div>

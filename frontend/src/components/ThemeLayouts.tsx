@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Profile, resolveMediaUrl } from "../utils/apiMock";
-import { ExternalLink, FileText, Film, X, Play, User, Globe, Link as LinkIcon } from "lucide-react";
+import { ExternalLink, FileText, Film, X, Play, User, Globe, Link as LinkIcon, Share2 } from "lucide-react";
 
 // Inline brand icon SVGs
 const Github = (props: React.SVGProps<SVGSVGElement>) => (
@@ -43,6 +44,36 @@ export const triggerResumeDownload = (p: Profile) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+export const triggerResumeShare = async (p: Profile) => {
+  if (!p.resumeUrl) {
+    alert("No resume has been uploaded yet.");
+    return;
+  }
+  const url = resolveMediaUrl(p.resumeUrl);
+  const shareData = {
+    title: `${p.fullName || p.username}'s Resume`,
+    text: `Check out ${p.fullName || p.username}'s resume!`,
+    url: url.startsWith("data:") ? window.location.href : (url.startsWith("http") ? url : `${window.location.origin}${url}`),
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(shareData.url);
+      alert("Resume link copied to clipboard!");
+    }
+  } catch (err) {
+    console.error("Error sharing resume:", err);
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      alert("Resume link copied to clipboard!");
+    } catch (clipboardErr) {
+      alert("Failed to share or copy link.");
+    }
+  }
 };
 
 export const triggerVCardDownload = (p: Profile) => {
@@ -99,9 +130,9 @@ export default function ThemeLayouts({
 
       {/* Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-40 w-full flex items-center justify-between px-6 md:px-12 py-5 bg-white/20 backdrop-blur-md border-b border-white/25">
-        <span className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm">
+        <Link href="/" className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm cursor-pointer hover:opacity-80 transition-opacity">
           hire.me
-        </span>
+        </Link>
         <div className="flex items-center gap-3">
           {profile.tier === "pro" && (
             <span className="text-[10px] uppercase font-bold tracking-widest bg-white/10 px-2.5 py-1 rounded text-white border border-white/25 select-none">
@@ -110,10 +141,10 @@ export default function ThemeLayouts({
           )}
           {profile.resumeUrl && (
             <button
-              onClick={() => setShowResumeViewer(true)}
+              onClick={() => triggerResumeShare(profile)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 transition-all cursor-pointer"
             >
-              <FileText className="w-4 h-4" /> View Resume
+              <Share2 className="w-4 h-4" /> Share Resume
             </button>
           )}
         </div>
@@ -298,12 +329,12 @@ export default function ThemeLayouts({
                         </div>
                       )}
 
-                      {/* Compact Screenshots Previews: 200px * 120px */}
+                      {/* Compact Screenshots Previews */}
                       {proj.screenshots && proj.screenshots.map((src: string, sIdx: number) => (
                         <div 
                           key={sIdx}
                           onClick={() => setLightboxImage(resolveMediaUrl(src))}
-                          className="w-[200px] h-[120px] rounded-xl border border-neutral-300 overflow-hidden bg-neutral-100 shrink-0 relative cursor-pointer shadow-md hover:border-[#ff922b]/50"
+                          className="w-[200px] h-[120px] rounded-xl border border-neutral-300 overflow-hidden bg-neutral-100 shrink-0 relative cursor-pointer shadow-md hover:border-[#ff922b]/50 transition-all"
                           title="Click to enlarge screenshot"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -504,6 +535,12 @@ export default function ThemeLayouts({
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-neutral-950/40">
               <span className="text-sm font-extrabold uppercase tracking-wider text-neutral-300">Resume Viewer</span>
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => triggerResumeShare(profile)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Share Resume
+                </button>
                 <button
                   onClick={onDownloadResume}
                   className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-neutral-950 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"

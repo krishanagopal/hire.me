@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiMock } from "../../utils/apiMock";
-import { ArrowLeft, AlertTriangle, Shield } from "lucide-react";
+import { Mail, ArrowRight, ArrowLeft, AlertTriangle, RefreshCw, Key, Shield } from "lucide-react";
 
 // Inline brand SVGs for authentic Google and GitHub logos
 const GoogleIcon = () => (
@@ -126,6 +126,10 @@ export default function AuthPage() {
   }, []);
   
   // States
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
@@ -133,6 +137,57 @@ export default function AuthPage() {
   const [showMockModal, setShowMockModal] = useState<"google" | "github" | null>(null);
   const [mockEmail, setMockEmail] = useState("");
   const [mockName, setMockName] = useState("");
+
+  // Countdown timer for resending OTP
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  // Handle Email OTP Send
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await apiMock.sendOtp(email);
+      if (res.success) {
+        setOtpSent(true);
+        setCountdown(60); // 60 seconds throttle
+      } else {
+        setError(res.error || "Failed to send code.");
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle OTP Verification
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !otp) return;
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await apiMock.verifyOtp(email, otp);
+      if (res.success && res.user) {
+        handleAuthSuccess(res.user);
+      } else {
+        setError(res.error || "Invalid verification code.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Authentication failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handles post-auth routing logic based on onboarding progress
   const handleAuthSuccess = (user: any) => {
@@ -211,19 +266,19 @@ export default function AuthPage() {
       </div>
 
       {/* Floating Back Button (Top Left) */}
-      <button 
-        onClick={() => router.back()} 
+      <Link 
+        href="/" 
         className="absolute top-6 left-6 w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-neutral-200/50 text-neutral-800 hover:bg-neutral-50 active:scale-95 transition-all z-20 cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
-      </button>
+      </Link>
 
       {/* Floating Visit Site Badge (Bottom Left) */}
       <Link 
         href="/" 
         className="absolute bottom-6 left-6 hidden md:flex items-center gap-1.5 px-4.5 py-2.5 rounded-2xl bg-white/80 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-neutral-200/50 text-xs font-bold text-neutral-800 hover:bg-white transition-all z-20 cursor-pointer"
       >
-        <span className="text-sm font-semibold transform rotate-45 text-[#dc2626]">↗</span> Visit site
+        <span className="text-sm font-semibold transform rotate-45 text-[#dc2626]">Γåù</span> Visit site
       </Link>
 
       {/* Main Container Card (Dribbble Showcase split layout) */}
@@ -260,10 +315,10 @@ export default function AuthPage() {
             {/* Nav Arrows */}
             <div className="flex gap-1.5 z-10">
               <div className="w-7.5 h-7.5 rounded-full bg-white/80 border border-neutral-200/40 flex items-center justify-center text-neutral-800 shadow-sm backdrop-blur-md">
-                <span className="text-[10px] font-bold">←</span>
+                <span className="text-[10px] font-bold">ΓåÉ</span>
               </div>
               <div className="w-7.5 h-7.5 rounded-full bg-white/80 border border-neutral-200/40 flex items-center justify-center text-neutral-800 shadow-sm backdrop-blur-md">
-                <span className="text-[10px] font-bold">→</span>
+                <span className="text-[10px] font-bold">ΓåÆ</span>
               </div>
             </div>
           </div>
@@ -299,22 +354,124 @@ export default function AuthPage() {
           )}
 
           {/* OAuth Buttons Container */}
-          <div className="flex flex-col gap-3 mb-4">
-            <button
-              onClick={() => triggerOAuth("google")}
-              disabled={loading}
-              className="flex items-center justify-center w-full h-11 text-xs font-bold uppercase tracking-wider rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 text-neutral-800 shadow-sm cursor-pointer hover:border-neutral-400"
-            >
-              <GoogleIcon /> Continue with Google
-            </button>
-            
-            <button
-              onClick={() => triggerOAuth("github")}
-              disabled={loading}
-              className="flex items-center justify-center w-full h-11 text-xs font-bold uppercase tracking-wider rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 text-neutral-800 shadow-sm cursor-pointer hover:border-neutral-400"
-            >
-              <GithubIcon /> Continue with GitHub
-            </button>
+          {!otpSent && (
+            <div className="flex flex-col gap-3 mb-4">
+              <button
+                onClick={() => triggerOAuth("google")}
+                disabled={loading}
+                className="flex items-center justify-center w-full h-11 text-xs font-bold uppercase tracking-wider rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 text-neutral-800 shadow-sm cursor-pointer hover:border-neutral-400"
+              >
+                <GoogleIcon /> Continue with Google
+              </button>
+              
+              <button
+                onClick={() => triggerOAuth("github")}
+                disabled={loading}
+                className="flex items-center justify-center w-full h-11 text-xs font-bold uppercase tracking-wider rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 active:scale-98 transition-all disabled:opacity-50 text-neutral-800 shadow-sm cursor-pointer hover:border-neutral-400"
+              >
+                <GithubIcon /> Continue with GitHub
+              </button>
+            </div>
+          )}
+
+          {/* Divider */}
+          {!otpSent && (
+            <div className="flex items-center gap-3 my-4">
+              <div className="h-[1px] flex-1 bg-neutral-100" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">or continue with</span>
+              <div className="h-[1px] flex-1 bg-neutral-100" />
+            </div>
+          )}
+
+          {/* OTP Form */}
+          <div className="flex flex-col gap-4">
+            {!otpSent ? (
+              <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-450" />
+                    <input
+                      type="email"
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full h-11 pl-11 pr-4 rounded-xl border border-neutral-200 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white transition-all"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="flex items-center justify-center gap-2 w-full h-11 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#dc2626]/15 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    "Send OTP Code"
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Enter One-Time Password</label>
+                  <div className="relative">
+                    <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-450" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="123456"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                      className="w-full h-11 pl-11 pr-4 rounded-xl border border-neutral-200 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 tracking-[6px] font-mono font-bold focus:bg-white transition-all"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <span className="text-[10px] text-neutral-400 mt-1">
+                    Sent to <strong className="text-neutral-600">{email}</strong>
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || otp.length < 6}
+                  className="flex items-center justify-center gap-2 w-full h-11 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#dc2626]/15 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    "Verify & Continue"
+                  )}
+                </button>
+
+                {/* Resend actions */}
+                <div className="flex items-center justify-between mt-1 text-[10px] font-bold uppercase tracking-wider text-neutral-450">
+                  <button
+                    type="button"
+                    onClick={() => { setOtpSent(false); setOtp(""); }}
+                    className="hover:text-neutral-700 transition-colors cursor-pointer"
+                  >
+                    Change Email
+                  </button>
+                  {countdown > 0 ? (
+                    <span>Resend in {countdown}s</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      className="text-[#dc2626] hover:underline cursor-pointer"
+                    >
+                      Resend Code
+                    </button>
+                  )}
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Social Link Indicators matching reference design */}
@@ -332,7 +489,7 @@ export default function AuthPage() {
 
           {/* Footer info */}
           <p className="mt-6 text-center text-[10px] font-bold uppercase tracking-wider text-neutral-450 flex items-center justify-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-neutral-400" /> Secure OAuth authentication
+            <Shield className="w-3.5 h-3.5 text-neutral-400" /> Secure passwordless authentication
           </p>
         </div>
       </div>

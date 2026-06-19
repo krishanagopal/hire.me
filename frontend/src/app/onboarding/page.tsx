@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 import { apiMock, Profile, resolveMediaUrl } from "../../utils/apiMock";
@@ -100,29 +101,21 @@ function OnboardingForm() {
 
   // Authenticate user on mount
   useEffect(() => {
-    let user = apiMock.getCurrentUser();
-    if (!user) {
-      const rand = Math.floor(100000 + Math.random() * 900000);
-      const email = `mockuser_${rand}@hire.me`;
-      user = {
-        id: `mock_user_id_${rand}`,
-        email: email,
-        name: `Mock User ${rand}`,
-        provider: "mock",
-        isVerified: true,
-        onboardingCompleted: false
-      };
-      localStorage.setItem("tc_logged_user", JSON.stringify(user));
-      localStorage.setItem("tc_token", `mock_token_${email}`);
-    }
-
-    setCurrentUser(user);
-    setName(user.name || "");
-    if (user.username) {
-      setUsername(user.username);
-    } else if (claimParam) {
-      setUsername(claimParam);
-    }
+    const checkAuth = async () => {
+      const user = await apiMock.getCurrentUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      setCurrentUser(user);
+      setName(user.fullName || user.name || "");
+      if (user.username) {
+        setUsername(user.username);
+      } else if (claimParam) {
+        setUsername(claimParam);
+      }
+    };
+    checkAuth();
   }, [router, claimParam]);
 
   // Check username availability
@@ -445,12 +438,23 @@ function OnboardingForm() {
 
       {/* Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-white/20 backdrop-blur-md border-b border-white/25">
-        <span className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm">
+        <Link href="/" className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm cursor-pointer hover:opacity-80 transition-opacity">
           hire.me
-        </span>
-        <span className="text-xs text-white/95 font-bold uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-          Setup Showcase Link
-        </span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:inline-block text-xs text-white/95 font-bold uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
+            Setup Showcase Link
+          </span>
+          <button 
+            onClick={async () => {
+              await apiMock.logout();
+              router.push("/login");
+            }}
+            className="text-xs text-white font-bold uppercase tracking-wider hover:text-neutral-200 transition-colors cursor-pointer"
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}

@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    supabaseId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     email: {
       type: String,
       required: true,
@@ -16,10 +21,18 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    // Add additional authentication fields (e.g. password, roles, etc.) below
-    avatar: {
+    fullName: {
       type: String,
       default: "",
+    },
+    avatarUrl: {
+      type: String,
+      default: "",
+    },
+    authProvider: {
+      type: String,
+      enum: ["email", "google", "github"],
+      default: "email",
     },
     onboardingCompleted: {
       type: Boolean,

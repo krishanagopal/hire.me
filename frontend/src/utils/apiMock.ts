@@ -115,20 +115,34 @@ export const resolveMediaUrl = (url?: string): string => {
   return url;
 };
 
-const getHeaders = () => {
+const getHeaders = async () => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("tc_token");
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    try {
+      const { supabase } = await import("../lib/supabase");
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.access_token) {
+        headers["Authorization"] = `Bearer ${data.session.access_token}`;
+        localStorage.setItem("tc_token", data.session.access_token);
+      } else {
+        const token = localStorage.getItem("tc_token");
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      }
+    } catch (e) {
+      const token = localStorage.getItem("tc_token");
+      if (token) headers["Authorization"] = `Bearer ${token}`;
     }
   }
   return headers;
 };
 
 const handleResponse = async (res: Response) => {
+  if (res.status === 401) {
+    throw new Error("Session expired. Please log in again.");
+  }
+  
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.message || "Request failed");
@@ -139,11 +153,38 @@ const handleResponse = async (res: Response) => {
 // API CLIENT
 export const apiMock = {
   // Authentication Actions
+  syncUser: async (): Promise<{ success: boolean; user?: User; error?: string }> => {
+    try {
+      const { supabase } = await import("../lib/supabase");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) throw sessionError;
+      if (!session) throw new Error("No active session");
+
+      const res = await fetch(`${BACKEND_URL}/auth/sync-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+      });
+      const data = await handleResponse(res);
+      
+      if (data.user) {
+        localStorage.setItem("tc_token", session.access_token);
+        localStorage.setItem("tc_logged_user", JSON.stringify(data.user));
+      }
+      return { success: true, user: data.user };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  },
+
   sendOtp: async (email: string): Promise<{ success: boolean; message?: string; error?: string }> => {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/otp/send`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify({ email }),
       });
       const data = await handleResponse(res);
@@ -157,7 +198,7 @@ export const apiMock = {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/otp/verify`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify({ email, otp }),
       });
       const data = await handleResponse(res);
@@ -176,7 +217,7 @@ export const apiMock = {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/google`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify({ token }),
       });
       const data = await handleResponse(res);
@@ -195,7 +236,7 @@ export const apiMock = {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/github`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify({ code }),
       });
       const data = await handleResponse(res);
@@ -226,7 +267,7 @@ export const apiMock = {
   checkUsernameAvailable: async (username: string): Promise<boolean> => {
     try {
       const res = await fetch(`${BACKEND_URL}/profiles/username/check?username=${encodeURIComponent(username)}`, {
-        headers: getHeaders(),
+        headers: await getHeaders(),
       });
       const data = await handleResponse(res);
       return data.available;
@@ -239,7 +280,7 @@ export const apiMock = {
     try {
       const res = await fetch(`${BACKEND_URL}/profiles/username/claim`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify({ username }),
       });
       await handleResponse(res);
@@ -259,7 +300,7 @@ export const apiMock = {
   getProfile: async (username: string): Promise<Profile | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/profiles/${encodeURIComponent(username)}`, {
-        headers: getHeaders(),
+        headers: await getHeaders(),
       });
       return await handleResponse(res);
     } catch (err) {
@@ -270,7 +311,7 @@ export const apiMock = {
   getMyProfile: async (): Promise<Profile | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/profiles/me`, {
-        headers: getHeaders(),
+        headers: await getHeaders(),
       });
       return await handleResponse(res);
     } catch (err) {
@@ -282,7 +323,7 @@ export const apiMock = {
     try {
       const res = await fetch(`${BACKEND_URL}/profiles/me`, {
         method: "PUT",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify(profileData),
       });
       const data = await handleResponse(res);
@@ -303,9 +344,15 @@ export const apiMock = {
   // Analytics Engine
   recordEvent: async (username: string, eventType: "profile_view" | "resume_download" | "github_click" | "linkedin_click" | "demo_video_play" | "contact_click", eventMetadata?: string): Promise<void> => {
     try {
+      // DO NOT COUNT events if the current user is the profile owner
+      const currentUser = await apiMock.getCurrentUser();
+      if (currentUser && currentUser.username === username) {
+        return;
+      }
+
       await fetch(`${BACKEND_URL}/analytics/event`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify({ username, eventType, eventMetadata }),
       });
     } catch (err) {
@@ -322,7 +369,7 @@ export const apiMock = {
   }> => {
     try {
       const res = await fetch(`${BACKEND_URL}/analytics/summary`, {
-        headers: getHeaders(),
+        headers: await getHeaders(),
       });
       return await handleResponse(res);
     } catch (err) {

@@ -1,52 +1,46 @@
-const User = require("../models/User");
-const jwt = require("jsonwebtoken");
-
-// A fresh placeholder middleware for route protection.
-// Modify this to implement your own verification mechanism (e.g., JWT verification).
 const protect = async (req, res, next) => {
   try {
-    let user;
     const authHeader = req.headers.authorization;
-    
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      
-      if (token && token.startsWith("mock_token_")) {
-        // Extract email from mock token
-        const email = token.replace("mock_token_", "");
-        user = await User.findOne({ email });
-        if (!user) {
-          user = new User({
-            email,
-            onboardingCompleted: false,
-          });
-          await user.save();
-        }
-      } else if (token) {
-        // Attempt normal JWT decoding if applicable
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
-          user = await User.findById(decoded.id);
-        } catch (err) {
-          // Token invalid or verification failed
-        }
-      }
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "No token provided" });
     }
-    
-    // If no user was found/created from token, use a default fallback to prevent crashes
-    if (!user) {
-      const defaultEmail = "mockuser@hire.me";
-      user = await User.findOne({ email: defaultEmail });
-      if (!user) {
-        user = new User({
-          email: defaultEmail,
-          onboardingCompleted: false,
-        });
-        await user.save();
+
+    const token = authHeader.split(" ")[1];
+    const supabaseUrl = process.env.SUPABASE_URL || "https://placeholder.supabase.co";
+
+    // Verify token by fetching user profile from Supabase Auth API
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: process.env.SUPABASE_KEY
       }
+    });
+
+    if (!response.ok) {
+      return res.status(401).json({ success: false, message: "Invalid token" });
     }
+
+    const userData = await response.json();
     
-    req.user = { id: user._id.toString(), email: user.email };
+    // Find or create user in our DB
+    const User = require("../models/User");
+    let mongoUser = await User.findOne({ supabaseId: userData.id });
+    if (!mongoUser) {
+      mongoUser = new User({
+        supabaseId: userData.id,
+        email: userData.email,
+        authProvider: "email"
+      });
+      await mongoUser.save();
+    }
+
+    // Attach to request
+    req.user = { 
+      id: mongoUser._id.toString(),
+      supabaseId: userData.id, 
+      email: userData.email 
+    };
+    
     next();
   } catch (error) {
     console.error("Auth Middleware Error:", error);

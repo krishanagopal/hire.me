@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
 import { apiMock, Profile } from "../../utils/apiMock";
@@ -34,9 +35,17 @@ const Twitter = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"analytics" | "edit" | "share">("analytics");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "share" || tab === "edit" || tab === "analytics") {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -73,16 +82,21 @@ export default function Dashboard() {
 
   // Load profile details
   useEffect(() => {
-    const user = apiMock.getCurrentUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    setCurrentUser(user);
-
     const loadData = async () => {
+      const user = await apiMock.getCurrentUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      setCurrentUser(user);
+
       const myProfile = await apiMock.getMyProfile();
       if (!myProfile) {
+        if (user.onboardingCompleted) {
+          setErrorMsg("Failed to connect to the server or retrieve your profile. Please check if the backend is running properly.");
+          setLoading(false);
+          return;
+        }
         router.push("/onboarding");
         return;
       }
@@ -169,6 +183,30 @@ export default function Dashboard() {
       proj.screenshots = proj.screenshots.filter((_: string, i: number) => i !== screenshotIdx);
       setLocalProjects(updatedProjects);
     }
+  };
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>, projectIdx: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const sizeInMB = file.size / (1024 * 1024);
+    if (sizeInMB > 15) {
+      setErrorMsg("Video file exceeds 15MB. Please upload a smaller video or use a YouTube link.");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      const updatedProjects = [...localProjects];
+      const proj = updatedProjects[projectIdx];
+      if (proj) {
+        proj.demoVideoUrl = base64;
+        setLocalProjects(updatedProjects);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Project fields updates
@@ -326,9 +364,9 @@ export default function Dashboard() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-[#030304] flex items-center justify-center text-neutral-400 select-none">
+      <div className="min-h-screen bg-[#efeff1] flex items-center justify-center text-neutral-500 select-none">
         <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+          <RefreshCw className="w-8 h-8 animate-spin text-[#dc2626]" />
           <span className="text-sm font-semibold tracking-widest uppercase">Loading Console...</span>
         </div>
       </div>
@@ -339,18 +377,26 @@ export default function Dashboard() {
   const isPro = profile.tier === "pro";
 
   return (
-    <div className="min-h-screen bg-[#030304] text-white flex flex-col select-none relative">
+    <div className="min-h-screen bg-[#efeff1] text-neutral-900 flex flex-col select-none relative overflow-hidden">
+      {/* Background Image Layer */}
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none">
+        <img 
+          src="/media__1781250813790.jpg" 
+          alt="Background Art" 
+          className="w-full h-full object-cover object-center filter blur-3xl scale-110 opacity-30 select-none pointer-events-none" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/20" />
+      </div>
+      <div className="relative z-10 flex flex-col w-full min-h-screen">
       
       {/* Dashboard Header */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-12 py-4 bg-neutral-950/45 backdrop-blur-md border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-neutral-300 to-neutral-600 bg-clip-text text-transparent">
-            hire.me
-          </span>
-          <span className="text-[9px] uppercase font-bold tracking-widest bg-blue-500/10 px-2 py-0.5 rounded text-blue-400">
+      <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-12 py-4 bg-white/80 backdrop-blur-md border-b border-neutral-200/60">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <span className="font-extrabold text-xl tracking-tight uppercase text-neutral-950">hire<span className="text-[#dc2626]">.me</span></span>
+          <span className="text-[9px] uppercase font-bold tracking-widest bg-[#dc2626]/10 px-2 py-0.5 rounded text-[#dc2626]">
             Console
           </span>
-        </div>
+        </Link>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             {isPro ? (
@@ -363,7 +409,7 @@ export default function Dashboard() {
                   setUpgradeMessage("Unlock unlimited project video showreels and screenshot uploads!");
                   setShowUpgradeModal(true);
                 }}
-                className="flex items-center gap-1 text-[9px] uppercase font-bold tracking-widest bg-amber-500 text-neutral-950 px-2.5 py-1 rounded hover:scale-105 transition-all"
+                className="flex items-center gap-1 text-[9px] uppercase font-bold tracking-widest bg-amber-500 text-neutral-900 px-2.5 py-1 rounded hover:scale-105 transition-all"
               >
                 <Zap className="w-3 h-3 fill-neutral-950" /> Upgrade
               </button>
@@ -373,13 +419,13 @@ export default function Dashboard() {
             href={shareUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:text-neutral-900 transition-colors"
           >
             Preview Showcase Link <ExternalLink className="w-3.5 h-3.5" />
           </a>
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400 hover:text-rose-450 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-500 hover:text-rose-450 transition-colors"
           >
             Logout <LogOut className="w-4 h-4" />
           </button>
@@ -391,27 +437,27 @@ export default function Dashboard() {
         
         {/* Navigation Sidebar */}
         <div className="md:col-span-1 flex flex-col gap-2.5">
-          <div className="p-4 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col min-w-0">
+          <div className="p-4 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col min-w-0">
             <span className="text-xs font-bold truncate">{profile.fullName}</span>
-            <span className="text-[10px] text-neutral-450 truncate">hire.me/{profile.username}</span>
+            <span className="text-[10px] text-neutral-500 truncate">hire.me/{profile.username}</span>
           </div>
 
-          <nav className="flex flex-row md:flex-col gap-2 p-1.5 rounded-2xl border border-white/5 bg-neutral-950/10 backdrop-blur-md w-full">
+          <nav className="flex flex-row md:flex-col gap-2 p-1.5 rounded-2xl border border-neutral-200/60 bg-white/60 backdrop-blur-md w-full overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
             <button
               onClick={() => setActiveTab("analytics")}
-              className={`flex-grow md:flex-none flex items-center justify-center md:justify-start gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "analytics" ? "bg-white text-neutral-950" : "text-neutral-450 hover:text-white"}`}
+              className={`flex-grow md:flex-none flex items-center justify-center md:justify-start gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "analytics" ? "bg-white shadow-sm text-[#dc2626] border border-neutral-200" : "text-neutral-500 hover:text-[#dc2626] hover:bg-neutral-50"}`}
             >
               <Eye className="w-4 h-4" /> Showcase Stats
             </button>
             <button
               onClick={() => setActiveTab("edit")}
-              className={`flex-grow md:flex-none flex items-center justify-center md:justify-start gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "edit" ? "bg-white text-neutral-950" : "text-neutral-450 hover:text-white"}`}
+              className={`flex-grow md:flex-none flex items-center justify-center md:justify-start gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "edit" ? "bg-white shadow-sm text-[#dc2626] border border-neutral-200" : "text-neutral-500 hover:text-[#dc2626] hover:bg-neutral-50"}`}
             >
               <Settings className="w-4 h-4" /> Edit Showcase
             </button>
             <button
               onClick={() => setActiveTab("share")}
-              className={`flex-grow md:flex-none flex items-center justify-center md:justify-start gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "share" ? "bg-white text-neutral-950" : "text-neutral-450 hover:text-white"}`}
+              className={`flex-grow md:flex-none flex items-center justify-center md:justify-start gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "share" ? "bg-white shadow-sm text-[#dc2626] border border-neutral-200" : "text-neutral-500 hover:text-[#dc2626] hover:bg-neutral-50"}`}
             >
               <QrCode className="w-4 h-4" /> Share Link
             </button>
@@ -422,8 +468,10 @@ export default function Dashboard() {
         <div className="md:col-span-3 flex flex-col gap-6">
           
           {successMsg && (
-            <div className="flex items-center gap-3 p-3.5 text-xs rounded-xl border border-emerald-500/20 bg-emerald-950/15 text-emerald-300">
-              <Check className="w-4 h-4 shrink-0" />
+            <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 px-5 py-3.5 text-xs font-bold rounded-2xl border border-emerald-200 bg-white text-emerald-600 shadow-[0_8px_30px_rgba(16,185,129,0.2)] animate-in slide-in-from-bottom-5 fade-in duration-300">
+              <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                <Check className="w-4 h-4 text-emerald-600" />
+              </div>
               <span>{successMsg}</span>
             </div>
           )}
@@ -440,37 +488,37 @@ export default function Dashboard() {
             <div className="flex flex-col gap-6">
               
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/30 backdrop-blur-md flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-neutral-450">
+                <div className="p-5 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-neutral-500">
                     <span>Showcase Views</span>
-                    <Eye className="w-4 h-4 text-blue-400" />
+                    <Eye className="w-4 h-4 text-[#dc2626]" />
                   </div>
                   <span className="text-3xl font-black">{stats.views}</span>
                 </div>
-                <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/30 backdrop-blur-md flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-neutral-450">
+                <div className="p-5 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-neutral-500">
                     <span>Resume Downloads</span>
-                    <Download className="w-4 h-4 text-indigo-400" />
+                    <Download className="w-4 h-4 text-[#dc2626]" />
                   </div>
                   <span className="text-3xl font-black">{stats.downloads}</span>
                 </div>
-                <div className="p-5 rounded-2xl border border-white/5 bg-neutral-950/30 backdrop-blur-md flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-neutral-450">
+                <div className="p-5 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-neutral-500">
                     <span>Channel Clicks</span>
-                    <MousePointer className="w-4 h-4 text-emerald-400" />
+                    <MousePointer className="w-4 h-4 text-[#dc2626]" />
                   </div>
                   <span className="text-3xl font-black">{stats.clicks}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col gap-4">
-                  <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-455">Channel Click Breakdown</h3>
+                <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-4">
+                  <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-500">Channel Click Breakdown</h3>
                   <div className="flex flex-col gap-3.5 max-h-[160px] overflow-y-auto">
                     {Object.entries(stats.clicksBreakdown).map(([platform, count]) => (
                       <div key={platform} className="flex justify-between items-center text-xs">
-                        <span className="font-semibold capitalize text-neutral-300">{platform}</span>
-                        <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-[10px]">{count} clicks</span>
+                        <span className="font-semibold capitalize text-neutral-600">{platform}</span>
+                        <span className="font-mono bg-neutral-100 px-2 py-0.5 rounded text-[10px]">{count} clicks</span>
                       </div>
                     ))}
                     {Object.keys(stats.clicksBreakdown).length === 0 && (
@@ -488,59 +536,59 @@ export default function Dashboard() {
             <form onSubmit={handleSaveShowcase} className="flex flex-col gap-6">
               
               {/* Profile Info Form */}
-              <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col gap-4">
-                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-400 flex items-center gap-2">
+              <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-4">
+                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-500 flex items-center gap-2">
                   <User className="w-4 h-4" /> Profile Details
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Full Name</label>
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Full Name</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                       required
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Headline</label>
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Headline</label>
                     <input
                       type="text"
                       value={headline}
                       onChange={(e) => setHeadline(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                     />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Bio Description</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Bio Description</label>
                   <textarea
                     rows={3}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="p-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50 resize-none"
+                    className="p-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white resize-none"
                   />
                 </div>
               </div>
 
               {/* Multi Project Showreels Section */}
-              <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col gap-5">
+              <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-400 flex items-center gap-2">
+                  <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-500 flex items-center gap-2">
                     <Play className="w-4 h-4" /> Projects & Videos ({localProjects.length})
                   </h3>
                   <button
                     type="button"
                     onClick={handleAddProject}
-                    className="flex items-center gap-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg transition-all"
+                    className="flex items-center gap-1.5 text-xs font-bold bg-neutral-50 hover:bg-neutral-100 border border-neutral-200/60 px-3 py-1.5 rounded-lg transition-all"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add Project Video
+                    <Plus className="w-3.5 h-3.5" /> Add Project
                   </button>
                 </div>
 
                 {localProjects.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-neutral-500 italic border border-dashed border-white/5 rounded-xl">
+                  <div className="p-8 text-center text-xs text-neutral-500 italic border border-dashed border-neutral-200/60 rounded-xl">
                     No project showreels added yet. Add one above!
                   </div>
                 ) : (
@@ -554,8 +602,8 @@ export default function Dashboard() {
                           onClick={() => setActiveProjEditIdx(idx)}
                           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                             activeProjEditIdx === idx 
-                              ? "bg-white text-neutral-950" 
-                              : "bg-white/5 hover:bg-white/10 text-neutral-300"
+                              ? "bg-white text-neutral-900" 
+                              : "bg-neutral-50 hover:bg-neutral-100 text-neutral-600"
                           }`}
                         >
                           <span className="truncate max-w-[120px]">{p.name || `Project ${idx + 1}`}</span>
@@ -566,73 +614,104 @@ export default function Dashboard() {
 
                     {/* Active Project Form */}
                     {localProjects[activeProjEditIdx] && (
-                      <div className="p-5 rounded-2xl border border-white/10 bg-neutral-950/40 flex flex-col gap-4 animate-fade-in relative">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveProject(activeProjEditIdx)}
-                          className="absolute top-4 right-4 p-1.5 text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                          title="Remove Project"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <div className="p-5 rounded-2xl border border-neutral-200/60 bg-white/90 shadow-sm flex flex-col gap-4 animate-fade-in relative">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3 -mt-1">
+                          <h4 className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-800">Editing Project {activeProjEditIdx + 1}</h4>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProject(activeProjEditIdx)}
+                            className="flex items-center gap-1.5 p-1.5 px-2.5 text-[10px] uppercase tracking-wider font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                            title="Delete Project"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete Project
+                          </button>
+                        </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Project Name</label>
+                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Project Name</label>
                             <input
                               type="text"
                               value={localProjects[activeProjEditIdx].name}
                               onChange={(e) => handleProjFieldChange(activeProjEditIdx, "name", e.target.value)}
-                              className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                              className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                               required
                             />
                           </div>
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Demo Video URL</label>
-                            <input
-                              type="url"
-                              value={localProjects[activeProjEditIdx].demoVideoUrl || ""}
-                              onChange={(e) => handleProjFieldChange(activeProjEditIdx, "demoVideoUrl", e.target.value)}
-                              className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
-                              placeholder="YouTube link or direct MP4 URL"
-                              required
-                            />
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Demo Video URL</label>
+                              <label className="text-[9px] uppercase font-bold text-[#ff922b] cursor-pointer hover:underline flex items-center gap-1">
+                                <Upload className="w-3 h-3" /> Upload (Max 15MB)
+                                <input
+                                  type="file"
+                                  accept="video/*"
+                                  className="hidden"
+                                  onChange={(e) => handleVideoUpload(e, activeProjEditIdx)}
+                                />
+                              </label>
+                            </div>
+                            {localProjects[activeProjEditIdx].demoVideoUrl?.startsWith("data:video/") ? (
+                              <div className="flex flex-col gap-1 h-10 justify-center px-3.5 rounded-xl border border-[#ff922b] bg-[#ff922b]/5">
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-xs font-semibold text-neutral-700 truncate flex items-center gap-2">
+                                    <Play className="w-3.5 h-3.5 text-[#ff922b]" /> Uploaded Video File
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleProjFieldChange(activeProjEditIdx, "demoVideoUrl", "")}
+                                    className="text-neutral-400 hover:text-red-500"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <input
+                                type="url"
+                                value={localProjects[activeProjEditIdx].demoVideoUrl || ""}
+                                onChange={(e) => handleProjFieldChange(activeProjEditIdx, "demoVideoUrl", e.target.value)}
+                                className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
+                                placeholder="YouTube link or direct MP4 URL"
+                                required
+                              />
+                            )}
                           </div>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Short Description</label>
+                          <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Short Description</label>
                           <input
                             type="text"
                             value={localProjects[activeProjEditIdx].description || ""}
                             onChange={(e) => handleProjFieldChange(activeProjEditIdx, "description", e.target.value)}
-                            className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                            className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                           />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">GitHub Repo URL</label>
+                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">GitHub Repo URL</label>
                             <input
                               type="url"
                               value={localProjects[activeProjEditIdx].githubUrl || ""}
                               onChange={(e) => handleProjFieldChange(activeProjEditIdx, "githubUrl", e.target.value)}
-                              className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                              className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                             />
                           </div>
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Live Site URL</label>
+                            <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Live Site URL</label>
                             <input
                               type="url"
                               value={localProjects[activeProjEditIdx].liveUrl || ""}
                               onChange={(e) => handleProjFieldChange(activeProjEditIdx, "liveUrl", e.target.value)}
-                              className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                              className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                             />
                           </div>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Tech Stack (comma-separated)</label>
+                          <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Tech Stack (comma-separated)</label>
                           <input
                             type="text"
                             placeholder="React, Next.js, Express"
@@ -649,17 +728,17 @@ export default function Dashboard() {
                                 e.target.value.split(",").map(t => t.trim())
                               );
                             }}
-                            className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                            className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                           />
                         </div>
 
                         {/* Screenshots Upload Manager */}
-                        <div className="flex flex-col gap-3 border-t border-white/5 pt-4 mt-2">
+                        <div className="flex flex-col gap-3 border-t border-neutral-200/60 pt-4 mt-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Screenshots ({(localProjects[activeProjEditIdx].screenshots || []).length}/4)</span>
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Screenshots ({(localProjects[activeProjEditIdx].screenshots || []).length}/4)</span>
                             {(localProjects[activeProjEditIdx].screenshots || []).length < 4 || isPro ? (
-                              <label className="flex items-center gap-1 text-[10px] font-bold bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg hover:bg-white/10 cursor-pointer transition-all">
-                                <Upload className="w-3 h-3" /> Upload Screen
+                              <label className="flex items-center gap-1 text-[10px] font-bold bg-neutral-50 border border-neutral-200/60 px-2.5 py-1 rounded-lg hover:bg-neutral-100 cursor-pointer transition-all">
+                                <Upload className="w-3 h-3" /> Upload Screenshot
                                 <input 
                                   type="file" 
                                   accept="image/*" 
@@ -674,13 +753,13 @@ export default function Dashboard() {
 
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-1">
                             {(localProjects[activeProjEditIdx].screenshots || []).map((src: string, imgIdx: number) => (
-                              <div key={imgIdx} className="relative aspect-video rounded-lg overflow-hidden bg-neutral-900 border border-white/5 group">
+                              <div key={imgIdx} className="relative aspect-video rounded-lg overflow-hidden bg-neutral-900 border border-neutral-200/60 group">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={src} alt="Preview" className="w-full h-full object-cover" />
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteScreenshot(activeProjEditIdx, imgIdx)}
-                                  className="absolute top-1 right-1 p-1 bg-black/60 hover:bg-rose-600/90 text-white rounded-md transition-all opacity-0 group-hover:opacity-100"
+                                  className="absolute top-1 right-1 p-1 bg-black/60 hover:bg-rose-600/90 text-neutral-900 rounded-md transition-all opacity-0 group-hover:opacity-100"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
@@ -696,53 +775,53 @@ export default function Dashboard() {
               </div>
 
               {/* Social channels links */}
-              <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col gap-4">
-                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-400 flex items-center gap-2">
+              <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-4">
+                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-500 flex items-center gap-2">
                   <LinkIcon className="w-4 h-4" /> Connect Channels
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
-                      <Linkedin className="w-3.5 h-3.5 text-blue-400" /> LinkedIn Profile Link
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 flex items-center gap-1.5">
+                      <Linkedin className="w-3.5 h-3.5 text-[#dc2626]" /> LinkedIn Profile Link
                     </label>
                     <input
                       type="url"
                       value={linkedin}
                       onChange={(e) => setLinkedin(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
-                      <Github className="w-3.5 h-3.5 text-neutral-300" /> GitHub Profile Link
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 flex items-center gap-1.5">
+                      <Github className="w-3.5 h-3.5 text-neutral-600" /> GitHub Profile Link
                     </label>
                     <input
                       type="url"
                       value={github}
                       onChange={(e) => setGithub(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 flex items-center gap-1.5">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 flex items-center gap-1.5">
                       <Twitter className="w-3.5 h-3.5 text-sky-400" /> Twitter / X Profile Link
                     </label>
                     <input
                       type="url"
                       value={twitter}
                       onChange={(e) => setTwitter(e.target.value)}
-                      className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="h-10 px-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 text-neutral-900 text-sm focus:outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 focus:bg-white"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Resume File Upload */}
-              <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col gap-4">
-                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-400 flex items-center gap-2">
+              <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-4">
+                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-500 flex items-center gap-2">
                   <FileText className="w-4 h-4" /> Resume PDF
                 </h3>
-                <div className="flex items-center gap-4 p-2.5 rounded-xl border border-white/5 bg-neutral-950/20">
+                <div className="flex items-center gap-4 p-2.5 rounded-xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px]">
                   <div className="flex-1 min-w-0">
                     {resumeFileName ? (
                       <span className="text-xs font-semibold text-neutral-350 truncate block">{resumeFileName}</span>
@@ -750,7 +829,7 @@ export default function Dashboard() {
                       <span className="text-xs text-neutral-500 italic block">No resume uploaded yet.</span>
                     )}
                   </div>
-                  <label className="flex items-center gap-1.5 text-xs font-bold bg-white/5 border border-white/10 px-3.5 py-2 rounded-lg hover:bg-white/10 cursor-pointer shrink-0 transition-all">
+                  <label className="flex items-center gap-1.5 text-xs font-bold bg-neutral-50 border border-neutral-200/60 px-3.5 py-2 rounded-lg hover:bg-neutral-100 cursor-pointer shrink-0 transition-all">
                     <Upload className="w-3.5 h-3.5" /> Upload Resume PDF
                     <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} />
                   </label>
@@ -758,8 +837,8 @@ export default function Dashboard() {
               </div>
 
               {/* Theme Customizations (Accent only) */}
-              <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col gap-4">
-                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-400 flex items-center gap-2">
+              <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col gap-4">
+                <h3 className="text-xs uppercase font-extrabold tracking-widest text-neutral-500 flex items-center gap-2">
                   <Palette className="w-4 h-4" /> Brand Accent Color
                 </h3>
                 <div className="flex items-center gap-3">
@@ -768,12 +847,12 @@ export default function Dashboard() {
                       key={color.name}
                       type="button"
                       onClick={() => setAccentColor(color.hex)}
-                      className="relative w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                      className="relative w-8 h-8 rounded-full border border-neutral-200/60 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
                     >
                       {accentColor === color.hex && (
-                        <Check className="w-4 h-4 text-white drop-shadow-md" />
+                        <Check className="w-4 h-4 text-neutral-900 drop-shadow-md" />
                       )}
                     </button>
                   ))}
@@ -783,7 +862,7 @@ export default function Dashboard() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-xl bg-blue-500 text-white font-bold text-sm hover:bg-blue-600 active:scale-98 transition-all disabled:opacity-50 flex items-center justify-center shadow-lg shadow-blue-500/15"
+                className="w-full h-12 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-lg shadow-[#dc2626]/15 active:scale-98 transition-all disabled:opacity-50 flex items-center justify-center"
               >
                 {loading ? "Saving changes..." : "Save Showcase Changes"}
               </button>
@@ -795,10 +874,10 @@ export default function Dashboard() {
           {activeTab === "share" && (
             <div className="flex flex-col gap-6">
               
-              <div className="p-6 rounded-2xl border border-white/5 bg-neutral-950/20 backdrop-blur-md flex flex-col items-center gap-6 text-center">
+              <div className="p-6 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col items-center gap-6 text-center">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-xl font-bold tracking-tight">Your Showcase Link</h3>
-                  <p className="text-xs text-neutral-400 max-w-sm">
+                  <p className="text-xs text-neutral-500 max-w-sm">
                     Recruiters can visit this link or scan the code to watch your project demo video and download your resume.
                   </p>
                 </div>
@@ -815,16 +894,16 @@ export default function Dashboard() {
                 </div>
 
                 <div className="w-full max-w-sm flex flex-col gap-3">
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-neutral-900/40 text-xs text-left">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-neutral-200/60 bg-neutral-900/40 text-xs text-left">
                     <div className="flex flex-col min-w-0 font-sans">
                       <span className="font-bold">Permanent Link</span>
-                      <span className="font-mono text-neutral-400 mt-0.5 truncate">{shareUrl}</span>
+                      <span className="font-mono text-neutral-500 mt-0.5 truncate">{shareUrl}</span>
                     </div>
                     <a
                       href={shareUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white shrink-0"
+                      className="p-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 text-neutral-900 shrink-0"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
@@ -833,7 +912,7 @@ export default function Dashboard() {
                   {profile.resumeUrl && (
                     <button
                       onClick={() => triggerResumeDownload(profile)}
-                      className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 active:scale-95 transition-all border border-neutral-300"
+                      className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-white text-white font-bold text-xs hover:bg-neutral-200 active:scale-95 transition-all border border-neutral-300"
                     >
                       Test Resume Download (.pdf)
                     </button>
@@ -850,10 +929,10 @@ export default function Dashboard() {
       {/* Upgrade Subscription Modal */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="relative max-w-md w-full p-8 rounded-3xl border border-white/10 bg-neutral-950 shadow-2xl flex flex-col items-center text-center gap-6">
+          <div className="relative max-w-md w-full p-8 rounded-3xl border border-neutral-200/60 bg-white shadow-[0_35px_100px_-20px_rgba(0,0,0,0.12)] flex flex-col items-center text-center gap-6">
             <button 
               onClick={() => setShowUpgradeModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              className="absolute top-4 right-4 p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -863,19 +942,19 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <h3 className="text-xl font-bold tracking-tight text-white">Upgrade to hire.me Pro</h3>
-              <p className="text-xs text-neutral-400 font-semibold uppercase tracking-wider text-amber-500">{upgradeMessage}</p>
-              <p className="text-xs text-neutral-300 leading-normal max-w-sm mt-1">
+              <h3 className="text-xl font-bold tracking-tight text-neutral-900">Upgrade to hire.me Pro</h3>
+              <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider text-amber-500">{upgradeMessage}</p>
+              <p className="text-xs text-neutral-600 leading-normal max-w-sm mt-1">
                 Unlock unlimited project videos, unlimited screenshots, priority analytics metrics, and custom branding accent highlights.
               </p>
             </div>
 
-            <div className="text-2xl font-black text-white">$5 <span className="text-xs text-neutral-400 font-bold uppercase tracking-widest">/ month</span></div>
+            <div className="text-2xl font-black text-neutral-900">$5 <span className="text-xs text-neutral-500 font-bold uppercase tracking-widest">/ month</span></div>
 
             <button
               onClick={handleUpgradeToPro}
               disabled={loading}
-              className="w-full h-11 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-white/5"
+              className="w-full h-11 rounded-xl bg-white text-white font-bold text-xs hover:bg-neutral-200 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-white/5"
             >
               {loading ? "Upgrading Account..." : "Upgrade to Pro Now"}
             </button>
@@ -883,6 +962,7 @@ export default function Dashboard() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }

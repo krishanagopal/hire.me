@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ThemeLayouts, { triggerVCardDownload, triggerResumeDownload } from "../../components/ThemeLayouts";
 import { apiMock, Profile } from "../../utils/apiMock";
-import { Search, Compass, ShieldAlert, Sparkles, RefreshCw } from "lucide-react";
+import { Search, Compass, ShieldAlert, Sparkles, RefreshCw, Settings } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -17,6 +17,7 @@ export default function PublicProfile({ params }: PageProps) {
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -27,6 +28,11 @@ export default function PublicProfile({ params }: PageProps) {
         if (data) {
           setProfile(data);
           
+          const currentUser = await apiMock.getCurrentUser();
+          if (currentUser && currentUser.username === data.username) {
+            setIsOwner(true);
+          }
+
           // Record view event in analytics
           await apiMock.recordEvent(username, "profile_view");
         }
@@ -125,12 +131,21 @@ export default function PublicProfile({ params }: PageProps) {
 
   // Render the selected theme layout
   return (
-    <ThemeLayouts 
-      profile={profile}
-      onSocialClick={handleSocialClick}
-      onDownloadResume={handleDownloadResume}
-      onSaveContact={handleSaveContact}
-      onVideoPlay={handleVideoPlay}
-    />
+    <>
+      <ThemeLayouts 
+        profile={profile}
+        onSocialClick={handleSocialClick}
+        onDownloadResume={handleDownloadResume}
+        onSaveContact={handleSaveContact}
+        onVideoPlay={handleVideoPlay}
+      />
+      {isOwner && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Link href="/dashboard" className="flex items-center gap-2 bg-[#ff922b] hover:bg-[#e8590c] text-white px-5 py-3 rounded-full shadow-lg font-bold text-sm shadow-[#ff922b]/30 transition-all hover:scale-105 active:scale-95">
+            <Settings className="w-4 h-4" /> Edit Showcase
+          </Link>
+        </div>
+      )}
+    </>
   );
 }
