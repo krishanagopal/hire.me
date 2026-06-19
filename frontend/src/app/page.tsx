@@ -147,7 +147,7 @@ export default function Home() {
     checkAuth();
 
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      if (window.scrollY > 50) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -181,21 +181,21 @@ export default function Home() {
         gsap.fromTo(secId, 
           { 
             opacity: 0, 
-            y: 40,
-            filter: "blur(12px)",
-            scale: 0.98
+            y: 80,
+            filter: "blur(16px)",
+            scale: 0.95
           },
           {
             opacity: 1,
             y: 0,
             filter: "blur(0px)",
             scale: 1,
-            duration: 0.36,
-            ease: "power2.out",
+            duration: 1.2,
+            ease: "expo.out",
             scrollTrigger: {
               trigger: secId,
-              start: "top 85%",
-              toggleActions: "play none none none"
+              start: "top 80%",
+              toggleActions: "play none none reverse"
             }
           }
         );
@@ -248,10 +248,10 @@ export default function Home() {
       </div>
 
       {/* Unified Dynamic Navigation Bar */}
-      <header className={`fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-300 ${
+      <header className={`fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-500 ease-out ${
         isScrolled || isMobileMenuOpen
-          ? "bg-black/80 backdrop-blur-xl border-b border-white/10 py-3 md:py-2 text-white shadow-2xl" 
-          : "bg-transparent py-4 text-white"
+          ? "bg-black/50 backdrop-blur-lg border-b border-white/10 py-3 md:py-3 text-white shadow-2xl shadow-black/40" 
+          : "bg-transparent py-4 md:py-6 text-white"
       }`}>
         <div className="relative max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
           {/* Logo */}
