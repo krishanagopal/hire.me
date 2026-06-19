@@ -33,7 +33,7 @@ const Twitter = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -966,3 +966,12 @@ export default function Dashboard() {
     </div>
   );
 }
+
+export default function Dashboard() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white font-mono text-sm tracking-widest uppercase">Loading...</div>}>
+      <DashboardContent />
+    </React.Suspense>
+  );
+}
+
