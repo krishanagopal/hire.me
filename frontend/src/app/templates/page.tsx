@@ -305,7 +305,7 @@ export default function TemplatesPage() {
                         {myProfile.projects.map((project: any, idx: number) => (
                           <div key={idx} className="w-full p-3 rounded-2xl bg-neutral-900/50 border border-white/5 flex gap-3 items-center group transition-colors hover:border-white/20">
                             <div className="w-12 h-12 rounded-xl bg-neutral-800 shrink-0 overflow-hidden relative">
-                               <div className="absolute inset-0 opacity-40 bg-gradient-to-br" style={{ from: myProfile.accentColor || '#dc2626', to: 'transparent' }} />
+                               <div className="absolute inset-0 opacity-40" style={{ backgroundImage: `linear-gradient(to bottom right, ${myProfile.accentColor || '#dc2626'}, transparent)` }} />
                                <Layout className="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                             </div>
                             <div className="flex flex-col gap-1">
