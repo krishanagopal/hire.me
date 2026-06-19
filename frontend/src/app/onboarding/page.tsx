@@ -108,7 +108,7 @@ function OnboardingForm() {
         return;
       }
       setCurrentUser(user);
-      setName(user.fullName || user.name || "");
+      setName((user as any).fullName || (user as any).name || "");
       if (user.username) {
         setUsername(user.username);
       } else if (claimParam) {
