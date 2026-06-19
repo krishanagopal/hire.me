@@ -20,7 +20,7 @@ export default function AuthCallback() {
         const urlErrorDesc = params.get("error_description");
         
         if (urlError || urlErrorDesc) {
-          throw new Error(urlErrorDesc ? decodeURIComponent(urlErrorDesc).replace(/\+/g, ' ') : urlError);
+          throw new Error(urlErrorDesc ? decodeURIComponent(urlErrorDesc).replace(/\+/g, ' ') : (urlError || "Unknown error"));
         }
 
         // Wait for Supabase to process the URL hash and store the session
