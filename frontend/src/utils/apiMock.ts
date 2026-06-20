@@ -104,7 +104,10 @@ export interface User {
 }
 
 // Helpers for API communication
-export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+export const BACKEND_URL = envApiUrl 
+  ? (envApiUrl.endsWith("/api/v1") ? envApiUrl : `${envApiUrl.replace(/\/$/, "")}/api/v1`)
+  : "http://localhost:5000/api/v1";
 
 export const resolveMediaUrl = (url?: string): string => {
   if (!url) return "";
