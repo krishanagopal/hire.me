@@ -441,9 +441,9 @@ export default function Home() {
       {/* 1. HERO SECTION */}
       <section 
         id="hero-section"
-        className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-start md:min-h-screen px-6 md:px-12 lg:px-24 pt-[96px] md:pt-32 pb-[48px] md:pb-24 w-full max-w-7xl mx-auto"
+        className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-start md:min-h-screen px-6 md:px-12 lg:px-24 pt-[96px] md:pt-[104px] pb-[48px] md:pb-12 w-full max-w-7xl mx-auto"
       >
-        <div className="flex flex-col items-start text-left gap-6 w-full max-w-2xl mx-auto md:mx-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col items-start text-left gap-6 md:gap-4 w-full max-w-2xl mx-auto md:mx-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {/* Mobile Badge */}
           <div className="md:hidden inline-flex items-center gap-2 text-[11px] tracking-widest uppercase font-bold text-neutral-100 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm shadow-xl shadow-black/20">
             <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse" />
@@ -457,18 +457,24 @@ export default function Home() {
           </div>
 
           {/* Mobile Title */}
-          <h1 className="md:hidden font-extrabold tracking-tight text-white leading-[1.1] text-[clamp(2.25rem,8vw,4rem)]">
-            <span className="text-shadow-hero">Your Entire</span><br />
-            <span className="text-shadow-hero">Professional Identity.</span><br />
+          <h1 
+            className="md:hidden font-normal text-white leading-[1.2] text-[clamp(2.34rem,7.8vw,3.51rem)]"
+            style={{ fontFamily: 'var(--font-cursive), serif' }}
+          >
+            <span className="text-shadow-hero drop-shadow-md">Your Entire</span><br />
+            <span className="text-shadow-hero drop-shadow-md">Professional Identity.</span><br />
             <span className="bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
               One Link.
             </span>
           </h1>
 
           {/* Desktop Title */}
-          <h1 className="hidden md:block text-4xl md:text-7xl font-extrabold tracking-tight leading-tight text-white">
-            <span className="text-shadow-hero">Your Entire</span><br />
-            <span className="text-shadow-hero">Professional</span><br />
+          <h1 
+            className="hidden md:block text-4xl md:text-7xl font-normal leading-[1.1] text-white"
+            style={{ fontFamily: 'var(--font-cursive), serif' }}
+          >
+            <span className="text-shadow-hero drop-shadow-lg">Your Entire</span><br />
+            <span className="text-shadow-hero drop-shadow-lg">Professional</span><br />
             <span className="bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
               Identity. One Link.
             </span>
@@ -494,8 +500,8 @@ export default function Home() {
           {/* Desktop Content */}
           <p className="hidden md:block text-base md:text-lg text-neutral-200 leading-relaxed font-medium text-shadow-sub">
             Resumes tell recruiters what you've done. <strong>Hire.me shows them.</strong> Consolidate your LinkedIn, GitHub, and best projects into a single, interactive link.
-            <br /><br />
-            Let hiring teams play demo videos, view screenshots, and download your resume instantly. No scattered tabs. Just proof.
+            <br className="hidden md:block" />
+            <span className="block mt-2">Let hiring teams play demo videos, view screenshots, and download your resume instantly. No scattered tabs. Just proof.</span>
           </p>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-[16px] mt-4 w-full">
