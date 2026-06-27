@@ -33,19 +33,19 @@ export default function FAQPage() {
 
   const faqs = [
     {
-      q: "How is Hire.me different from a traditional resume PDF?",
-      a: "A traditional resume tells recruiters what you've done, but it cannot show them. A PDF cannot play video walkthroughs, display active GitHub repository stats, or host interactive links. Hire.me unites your resume, code repositories, design portfolios, and social accounts in a single, high-fidelity profile page."
+      q: "How is Evident different from a traditional resume PDF?",
+      a: "A traditional resume tells recruiters what you've done, but it cannot show them. A PDF cannot play video walkthroughs, display active GitHub repository stats, or host interactive links. Evident unites your resume, code repositories, design portfolios, and social accounts in a single, high-fidelity profile page."
     },
     {
       q: "Do I still need to upload my resume?",
-      a: "Yes! Hire.me hosts your latest resume PDF right on your page. Recruiters can preview it directly in their browser or download it in one click, meaning you still serve standard documents alongside interactive visual proof."
+      a: "Yes! Evident hosts your latest resume PDF right on your page. Recruiters can preview it directly in their browser or download it in one click, meaning you still serve standard documents alongside interactive visual proof."
     },
     {
       q: "Can I customize the visual layout of my profile?",
-      a: "Absolutely. Hire.me provides multiple layout styles matching different industry tones—ranging from a sleek developer console style for software engineers, to a clean minimalist design for UX/UI designers, and professional executive layouts for managers."
+      a: "Absolutely. Evident provides multiple layout styles matching different industry tones—ranging from a sleek developer console style for software engineers, to a clean minimalist design for UX/UI designers, and professional executive layouts for managers."
     },
     {
-      q: "How do analytics work on Hire.me?",
+      q: "How do analytics work on Evident?",
       a: "You get a real-time analytics dashboard tracking page views, resume downloads, GitHub click-throughs, and contact link events. This lets you know exactly when hiring managers are reviewing your profile and which parts of your showcase interest them the most."
     },
     {
@@ -99,7 +99,7 @@ export default function FAQPage() {
             href="/" 
             className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
-            hire.me
+            Evident
           </Link>
 
           {/* Centered Menu Links */}
@@ -232,7 +232,7 @@ export default function FAQPage() {
       <footer className="relative z-10 py-12 px-6 md:px-12 bg-neutral-950/60 backdrop-blur-md border-t border-white/5 text-neutral-400 text-xs select-none">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <span className="font-extrabold text-sm text-white tracking-tight">hire.me</span>
+            <span className="font-extrabold text-sm text-white tracking-tight">Evident</span>
             <span className="text-[10px] text-neutral-600 font-mono">© 2026 SaaS platform</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider">

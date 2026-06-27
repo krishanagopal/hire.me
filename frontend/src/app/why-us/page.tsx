@@ -70,7 +70,7 @@ export default function WhyUsPage() {
             href="/" 
             className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
-            hire.me
+            Evident
           </Link>
 
           {/* Centered Menu Links */}
@@ -224,7 +224,7 @@ export default function WhyUsPage() {
       <footer className="relative z-10 py-12 px-6 md:px-12 bg-neutral-950/60 backdrop-blur-md border-t border-white/5 text-neutral-400 text-xs select-none">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <span className="font-extrabold text-sm text-white tracking-tight">hire.me</span>
+            <span className="font-extrabold text-sm text-white tracking-tight">Evident</span>
             <span className="text-[10px] text-neutral-600 font-mono">© 2026 SaaS platform</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider">

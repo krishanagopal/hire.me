@@ -439,7 +439,7 @@ function OnboardingForm() {
       {/* Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-white/20 backdrop-blur-md border-b border-white/25">
         <Link href="/" className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm cursor-pointer hover:opacity-80 transition-opacity">
-          hire.me
+          Evident
         </Link>
         <div className="flex items-center gap-4">
           <span className="hidden sm:inline-block text-xs text-white/95 font-bold uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
@@ -1164,7 +1164,7 @@ function OnboardingForm() {
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-700">Permanent Username</label>
                         <div className="relative flex items-center">
-                          <span className="absolute left-3.5 text-xs text-neutral-450 font-bold select-none">hire.me/</span>
+                          <span className="absolute left-3.5 text-xs text-neutral-450 font-bold select-none">evident.krishanagopal.sbs/</span>
                           <input
                             type="text"
                             placeholder="username"
@@ -1230,7 +1230,7 @@ function OnboardingForm() {
 
       <footer className="w-full py-12 text-center relative z-10">
         <span className="text-xs text-white/80 font-semibold tracking-wide drop-shadow-sm">
-          Showcase link generated via <span className="font-extrabold text-white">hire.me</span>
+          Showcase link generated via <span className="font-extrabold text-white">Evident</span>
         </span>
       </footer>
 

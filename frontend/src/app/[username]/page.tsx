@@ -95,7 +95,7 @@ export default function PublicProfile({ params }: PageProps) {
         {/* Floating Header */}
         <header className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 md:px-12 py-5 bg-transparent">
           <Link href="/" className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-neutral-300 to-neutral-600 bg-clip-text text-transparent">
-            hire.me
+            Evident
           </Link>
         </header>
 
@@ -115,7 +115,7 @@ export default function PublicProfile({ params }: PageProps) {
               href={`/onboarding?claim=${username}`}
               className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-white via-neutral-300 to-neutral-600 text-neutral-950 font-bold text-sm shadow-xl shadow-neutral-500/10 hover:brightness-110 active:scale-98 transition-all"
             >
-              <Sparkles className="w-4 h-4 text-neutral-950" /> Claim hire.me/{username}
+              <Sparkles className="w-4 h-4 text-neutral-950" /> Claim evident.krishanagopal.sbs/{username}
             </Link>
             <Link 
               href="/"

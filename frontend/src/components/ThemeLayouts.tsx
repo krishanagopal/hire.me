@@ -131,7 +131,7 @@ export default function ThemeLayouts({
       {/* Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-40 w-full flex items-center justify-between px-6 md:px-12 py-5 bg-white/20 backdrop-blur-md border-b border-white/25">
         <Link href="/" className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm cursor-pointer hover:opacity-80 transition-opacity">
-          hire.me
+          Evident
         </Link>
         <div className="flex items-center gap-3">
           {profile.tier === "pro" && (
@@ -584,7 +584,7 @@ export default function ThemeLayouts({
       {/* Footer */}
       <footer className="w-full py-8 text-center relative z-10 bg-white/10 backdrop-blur-md border-t border-white/20">
         <span className="text-xs text-white drop-shadow-sm font-semibold">
-          Showcase link generated via <span className="font-extrabold text-white">hire.me</span>
+          Showcase link generated via <span className="font-extrabold text-white">Evident</span>
         </span>
       </footer>
     </div>

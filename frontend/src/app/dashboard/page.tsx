@@ -373,7 +373,7 @@ function DashboardContent() {
     );
   }
 
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/${profile.username}` : `/${profile.username}`;
+  const shareUrl = `https://evident.krishanagopal.sbs/${profile.username}`;
   const isPro = profile.tier === "pro";
 
   return (
@@ -392,7 +392,7 @@ function DashboardContent() {
       {/* Dashboard Header */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-12 py-4 bg-white/80 backdrop-blur-md border-b border-neutral-200/60">
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <span className="font-extrabold text-xl tracking-tight uppercase text-neutral-950">hire<span className="text-[#dc2626]">.me</span></span>
+          <span className="font-extrabold text-xl tracking-tight uppercase text-neutral-950">Evident</span>
           <span className="text-[9px] uppercase font-bold tracking-widest bg-[#dc2626]/10 px-2 py-0.5 rounded text-[#dc2626]">
             Console
           </span>
@@ -439,7 +439,7 @@ function DashboardContent() {
         <div className="md:col-span-1 flex flex-col gap-2.5">
           <div className="p-4 rounded-2xl border border-neutral-200 bg-white/80 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-[24px] backdrop-blur-md flex flex-col min-w-0">
             <span className="text-xs font-bold truncate">{profile.fullName}</span>
-            <span className="text-[10px] text-neutral-500 truncate">hire.me/{profile.username}</span>
+            <span className="text-[10px] text-neutral-500 truncate">evident.krishanagopal.sbs/{profile.username}</span>
           </div>
 
           <nav className="flex flex-row md:flex-col gap-2 p-1.5 rounded-2xl border border-neutral-200/60 bg-white/60 backdrop-blur-md w-full overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
@@ -942,7 +942,7 @@ function DashboardContent() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <h3 className="text-xl font-bold tracking-tight text-neutral-900">Upgrade to hire.me Pro</h3>
+              <h3 className="text-xl font-bold tracking-tight text-neutral-900">Upgrade to Evident Pro</h3>
               <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider text-amber-500">{upgradeMessage}</p>
               <p className="text-xs text-neutral-600 leading-normal max-w-sm mt-1">
                 Unlock unlimited project videos, unlimited screenshots, priority analytics metrics, and custom branding accent highlights.

@@ -18,19 +18,19 @@ export async function generateMetadata(
     
     if (res.ok && profile) {
       const name = profile.fullName || profile.username;
-      const headline = profile.headline || `${name}'s Professional Showcase on hire.me`;
+      const headline = profile.headline || `${name}'s Professional Showcase on Evident`;
       const description = profile.bio || `Explore the portfolio, projects, and resume of ${name}.`;
       // Use the profile banner, avatar, or default image for the card preview
       const ogImage = profile.bannerUrl || profile.avatarUrl || "/media__1781250813790.jpg";
       
       return {
-        title: `${name} | hire.me`,
+        title: `${name} | Evident`,
         description,
         openGraph: {
-          title: `${name} | hire.me Showcase`,
+          title: `${name} | Evident Showcase`,
           description,
-          url: `https://hire.me/${username}`,
-          siteName: 'hire.me',
+          url: `https://evident.krishanagopal.sbs/${username}`,
+          siteName: 'Evident',
           images: [
             {
               url: ogImage,
@@ -43,7 +43,7 @@ export async function generateMetadata(
         },
         twitter: {
           card: 'summary_large_image',
-          title: `${name} | hire.me Showcase`,
+          title: `${name} | Evident Showcase`,
           description,
           images: [ogImage],
         },
@@ -55,8 +55,8 @@ export async function generateMetadata(
 
   // Fallback metadata
   return {
-    title: `${username} | hire.me`,
-    description: "Professional Showcase on hire.me",
+    title: `${username} | Evident`,
+    description: "Professional Showcase on Evident",
   };
 }
 

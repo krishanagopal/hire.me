@@ -7,7 +7,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://hire-me-lime.vercel.app",
+      "https://evident.krishanagopal.sbs",
     ],
     credentials: true,
   })

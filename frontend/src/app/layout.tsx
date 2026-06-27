@@ -5,7 +5,7 @@ import { Playfair_Display } from "next/font/google";
 const elegantFont = Playfair_Display({ subsets: ["latin"], style: ["italic", "normal"], variable: "--font-cursive" });
 
 export const metadata: Metadata = {
-  title: "Hire.me - Your Unified Professional Identity",
+  title: "Evident - Your Unified Professional Identity",
   description: "Aggregates your resume, GitHub, LinkedIn, X/Twitter, and best project demos with video previews into a single shareable link for modern recruiters.",
 };
 

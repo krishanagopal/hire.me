@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
             href="/" 
             className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
-            hire.me
+            Evident
           </Link>
 
           {/* Centered Menu Links */}

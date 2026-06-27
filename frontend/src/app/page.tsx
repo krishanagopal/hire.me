@@ -259,7 +259,7 @@ export default function Home() {
             href="/" 
             className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
-            hire.me
+            Evident
           </Link>
 
           {/* Centered Menu Links */}
@@ -499,7 +499,7 @@ export default function Home() {
 
           {/* Desktop Content */}
           <p className="hidden md:block text-base md:text-lg text-neutral-200 leading-relaxed font-medium text-shadow-sub">
-            Resumes tell recruiters what you've done. <strong>Hire.me shows them.</strong> Consolidate your LinkedIn, GitHub, and best projects into a single, interactive link.
+            Resumes tell recruiters what you've done. <strong>Evident shows them.</strong> Consolidate your LinkedIn, GitHub, and best projects into a single, interactive link.
             <br className="hidden md:block" />
             <span className="block mt-2">Let hiring teams play demo videos, view screenshots, and download your resume instantly. No scattered tabs. Just proof.</span>
           </p>
@@ -510,7 +510,7 @@ export default function Home() {
                 href={isLoggedIn ? "/onboarding" : "/signup"}
                 className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-neutral-950 font-bold text-base hover:scale-[1.02] transition-transform shadow-xl shadow-white/10 active:scale-[0.98] text-center flex items-center justify-center"
               >
-                Create My hire.me Link
+                Create My Evident Link
               </Link>
             ) : (
               <>
@@ -532,7 +532,7 @@ export default function Home() {
           {/* glowing url preview */}
           <div className="mt-2 flex items-center gap-2.5 text-shadow-sub">
             <span className="text-sm font-mono text-neutral-400">
-              hire.me/<strong className="text-white hover:underline cursor-pointer">alex</strong>
+              evident.krishanagopal.sbs/<strong className="text-white hover:underline cursor-pointer">alex</strong>
             </span>
           </div>
         </div>
@@ -549,7 +549,7 @@ export default function Home() {
           <div className="flex flex-col gap-3 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">Built For Modern Professionals</h2>
             <p className="text-sm text-neutral-300 leading-relaxed">
-              Whether you're applying for jobs, networking at events, seeking freelance opportunities, or building your professional brand, hire.me helps you present yourself professionally with a single shareable link.
+              Whether you're applying for jobs, networking at events, seeking freelance opportunities, or building your professional brand, Evident helps you present yourself professionally with a single shareable link.
             </p>
           </div>
           {/* Desktop Bullet Points */}
@@ -657,7 +657,7 @@ export default function Home() {
             <div className="p-6 md:p-8 rounded-3xl border border-white/15 bg-neutral-950/50 backdrop-blur-md flex flex-col gap-4 relative overflow-hidden border-glow-neutral">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
               <h3 className="text-sm font-bold uppercase tracking-widest text-white flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> The Unified Profile (Hire.me Way)
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> The Unified Profile (Evident Way)
               </h3>
               <p className="text-xs text-neutral-200 leading-relaxed">
                 Consolidate your entire professional identity under a single link. No endless tab switching, no searching through links.
@@ -712,7 +712,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-col gap-1 max-w-xs">
-              <span className="text-xs font-bold text-white">Scan to Load hire.me/alex</span>
+              <span className="text-xs font-bold text-white">Scan to Load evident.krishanagopal.sbs/alex</span>
               <p className="text-[11px] text-neutral-300 leading-normal">
                 Visitors can simply scan your physical QR code to gain access to your resume PDF, credentials portfolio, and socials.
               </p>
@@ -721,7 +721,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. WHY HIRE.ME SECTION */}
+      {/* 10. WHY EVIDENT SECTION */}
       <section 
         id="why-section"
         className="relative z-10 py-24 px-6 md:px-24 bg-neutral-950/55 backdrop-blur-md border-t border-white/5"
@@ -737,7 +737,7 @@ export default function Home() {
               A static PDF resume tells recruiters what you've done. It cannot demonstrate how your product works, display your GitHub activity, or let them experience what you've built.
             </p>
             <p className="text-neutral-400 text-xs leading-relaxed">
-              Instead of forcing recruiters to search through separate social media profiles, repositories, and screenshots, Hire.me combines them into one seamless professional landing page.
+              Instead of forcing recruiters to search through separate social media profiles, repositories, and screenshots, Evident combines them into one seamless professional landing page.
             </p>
           </div>
 
@@ -746,8 +746,8 @@ export default function Home() {
             {[
               { 
                 num: "01", 
-                title: "Resumes Tell. Hire.me Shows.", 
-                desc: "A PDF cannot show your app's responsiveness, play a demo video, or exhibit your real-time coding output. Hire.me embeds live visuals directly." 
+                title: "Resumes Tell. Evident Shows.", 
+                desc: "A PDF cannot show your app's responsiveness, play a demo video, or exhibit your real-time coding output. Evident embeds live visuals directly." 
               },
               { 
                 num: "02", 
@@ -782,15 +782,15 @@ export default function Home() {
       >
         <div className="max-w-6xl mx-auto flex flex-col gap-14 text-center">
           <div className="flex flex-col gap-3 max-w-xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">Professionals Love hire.me</h2>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">Professionals Love Evident</h2>
             <p className="text-sm text-neutral-300 font-semibold">See how developers, managers, and designers land roles with their profile links.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
             {[
-              { n: "Alex Rivera", r: "Software Architect", f: "Using hire.me simplified my applications. I just paste my single link and recruiters get my code, resume, and contact card instantly." },
+              { n: "Alex Rivera", r: "Software Architect", f: "Using Evident simplified my applications. I just paste my single link and recruiters get my code, resume, and contact card instantly." },
               { n: "Sarah Chen", r: "UX Designer", f: "I love the minimal template theme! It lets my project showcase and case studies take center stage without clutter." },
-              { n: "David Park", r: "Startup Founder", f: "Whenever developers apply with their hire.me link, I evaluate their entire profile in 30 seconds. It's a lifesaver for recruiters." }
+              { n: "David Park", r: "Startup Founder", f: "Whenever developers apply with their Evident link, I evaluate their entire profile in 30 seconds. It's a lifesaver for recruiters." }
             ].map((t, idx) => (
               <div 
                 key={idx}
@@ -903,7 +903,7 @@ export default function Home() {
                 href="/onboarding"
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-neutral-950 font-extrabold text-sm hover:scale-105 transition-all shadow-lg shadow-white/10 active:scale-95 text-center flex items-center justify-center"
               >
-                Create My hire.me Link
+                Create My Evident Link
               </Link>
               <button 
                 onClick={triggerToast}
@@ -915,7 +915,7 @@ export default function Home() {
             {/* supporting text */}
             <div className="flex flex-col items-center gap-1.5 mt-2">
               <span className="text-xs text-neutral-450 font-mono">One Link. Infinite Opportunities.</span>
-              <span className="text-[10px] text-neutral-300 font-bold uppercase tracking-widest">hire.me/yourname</span>
+              <span className="text-[10px] text-neutral-300 font-bold uppercase tracking-widest">evident.krishanagopal.sbs/yourname</span>
             </div>
           </div>
         </div>
@@ -925,7 +925,7 @@ export default function Home() {
       <footer className="relative z-10 py-12 px-6 md:px-12 bg-neutral-950/60 backdrop-blur-md border-t border-white/5 text-neutral-400 text-xs select-none">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <span className="font-extrabold text-sm text-white tracking-tight">hire.me</span>
+            <span className="font-extrabold text-sm text-white tracking-tight">Evident</span>
             <span className="text-[10px] text-neutral-600 font-mono">© 2026 SaaS platform</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider">

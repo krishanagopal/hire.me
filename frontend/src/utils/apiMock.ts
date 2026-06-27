@@ -1,6 +1,6 @@
 "use client";
 
-// TypeScript interfaces for hire.me SaaS data models
+// TypeScript interfaces for Evident SaaS data models
 export interface SocialLinks {
   linkedin?: string;
   github?: string;

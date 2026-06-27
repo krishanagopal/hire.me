@@ -81,7 +81,7 @@ export default function LoginPage() {
           />
           <div className="relative z-10 flex items-center justify-between w-full">
             <span className="text-xs font-black uppercase tracking-widest text-[#dc2626] bg-white/80 border border-neutral-200/40 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-              hire.me
+              Evident
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider bg-white/80 border border-neutral-200/40 text-neutral-800 px-3 py-1.5 rounded-full backdrop-blur-md shadow-sm">
               Explore
@@ -103,7 +103,7 @@ export default function LoginPage() {
           
           <div className="mb-6 text-left">
             <span className="font-black text-xl tracking-tight uppercase text-neutral-950">
-              hire<span className="text-[#dc2626]">.me</span>
+              Evident
             </span>
           </div>
 

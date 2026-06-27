@@ -64,7 +64,7 @@ export default function TemplatesPage() {
 
   const handleCopyLink = () => {
     if (myProfile) {
-      const url = `${window.location.origin}/${myProfile.username}`;
+      const url = `https://evident.krishanagopal.sbs/${myProfile.username}`;
       navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -74,8 +74,8 @@ export default function TemplatesPage() {
   const handleShare = () => {
     if (myProfile && navigator.share) {
       navigator.share({
-        title: `${myProfile.fullName || myProfile.name}'s hire.me Profile`,
-        url: `${window.location.origin}/${myProfile.username}`
+        title: `${myProfile.fullName || myProfile.name}'s Evident Profile`,
+        url: `https://evident.krishanagopal.sbs/${myProfile.username}`
       });
     } else {
       handleCopyLink();
@@ -122,7 +122,7 @@ export default function TemplatesPage() {
             href="/" 
             className="font-serif text-3xl tracking-normal text-white hover:text-neutral-200 transition-colors duration-300"
           >
-            hire.me
+            Evident
           </Link>
 
           {/* Centered Menu Links */}
