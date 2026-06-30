@@ -312,7 +312,12 @@ export default function ThemeLayouts({
                           title="Click to play demo video"
                         >
                           {proj.demoVideoUrl.startsWith("data:video/") || proj.demoVideoUrl.includes(".mp4") || proj.demoVideoUrl.includes("/media/") ? (
-                            <video src={resolveMediaUrl(proj.demoVideoUrl)} className="w-full h-full object-cover pointer-events-none" preload="none" />
+                            <video 
+                              src={`${resolveMediaUrl(proj.demoVideoUrl)}#t=0.001`} 
+                              poster={proj.thumbnailUrl ? resolveMediaUrl(proj.thumbnailUrl) : (proj.screenshots && proj.screenshots[0] ? resolveMediaUrl(proj.screenshots[0]) : undefined)}
+                              className="w-full h-full object-cover pointer-events-none" 
+                              preload="metadata" 
+                            />
                           ) : (
                             getYoutubeThumbnailUrl(proj.demoVideoUrl) ? (
                               // eslint-disable-next-line @next/next/no-img-element
