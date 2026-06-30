@@ -11,7 +11,7 @@ import {
   User, Eye, Download, MousePointer, 
   Settings, QrCode, FileText, 
   ExternalLink, LogOut, RefreshCw, Check, Upload, AlertTriangle,
-  Play, Link as LinkIcon, Palette, Plus, Trash2, X, Zap
+  Play, Link as LinkIcon, Palette, Plus, Trash2, X, Zap, Copy
 } from "lucide-react";
 
 // Inline brand icon SVGs
@@ -899,22 +899,63 @@ function DashboardContent() {
                       <span className="font-bold">Permanent Link</span>
                       <span className="font-mono text-neutral-500 mt-0.5 truncate">{shareUrl}</span>
                     </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(shareUrl);
+                          setSuccessMsg("Link copied to clipboard!");
+                          setTimeout(() => setSuccessMsg(""), 3000);
+                        }}
+                        className="p-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 text-neutral-900"
+                        title="Copy Link"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <a
+                        href={shareUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 text-neutral-900"
+                        title="Open Link"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
                     <a
-                      href={shareUrl}
+                      href={`https://wa.me/?text=${encodeURIComponent(`Check out my portfolio: ${shareUrl}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 text-neutral-900 shrink-0"
+                      className="flex items-center justify-center gap-1.5 h-11 rounded-xl bg-[#25D366] text-white font-bold text-xs hover:bg-[#20b858] active:scale-95 transition-all shadow-sm"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                    <a
+                      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 h-11 rounded-xl bg-[#0077b5] text-white font-bold text-xs hover:bg-[#006097] active:scale-95 transition-all shadow-sm"
+                    >
+                      LinkedIn
+                    </a>
+                    <a
+                      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent("Check out my portfolio!")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 h-11 rounded-xl bg-black text-white font-bold text-xs hover:bg-neutral-800 active:scale-95 transition-all shadow-sm"
+                    >
+                      X / Twitter
                     </a>
                   </div>
 
                   {profile.resumeUrl && (
                     <button
                       onClick={() => triggerResumeDownload(profile)}
-                      className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-white text-white font-bold text-xs hover:bg-neutral-200 active:scale-95 transition-all border border-neutral-300"
+                      className="mt-2 flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-white text-neutral-900 font-bold text-xs hover:bg-neutral-50 active:scale-95 transition-all border border-neutral-300"
                     >
-                      Test Resume Download (.pdf)
+                      <Download className="w-4 h-4" /> Test Resume Download (.pdf)
                     </button>
                   )}
                 </div>
