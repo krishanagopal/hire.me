@@ -744,7 +744,7 @@ function OnboardingForm() {
                                 title="Click to play demo video"
                               >
                                 {proj.demoVideoUrl.startsWith("data:video/") || proj.demoVideoUrl.includes(".mp4") || proj.demoVideoUrl.includes("/media/") ? (
-                                  <video src={resolveMediaUrl(proj.demoVideoUrl)} className="w-full h-full object-cover pointer-events-none" preload="metadata" />
+                                  <video src={resolveMediaUrl(proj.demoVideoUrl)} className="w-full h-full object-cover pointer-events-none" preload="none" />
                                 ) : (
                                   getYoutubeThumbnailUrl(proj.demoVideoUrl) ? (
                                     // eslint-disable-next-line @next/next/no-img-element
