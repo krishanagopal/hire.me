@@ -459,7 +459,7 @@ export default function ThemeLayouts({
                   <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400">Showcase Link URL</label>
                   <div className="w-full h-11 px-4 rounded-xl border border-neutral-300 bg-white/70 flex items-center text-sm font-mono text-[#ff922b] select-all truncate">
                     <Globe className="w-4 h-4 text-neutral-400 shrink-0 mr-2" />
-                    <span>http://localhost:3000/{profile.username}</span>
+                    <span>https://evident.krishanagopal.sbs/{profile.username}</span>
                   </div>
                 </div>
 

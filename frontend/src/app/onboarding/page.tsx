@@ -1191,7 +1191,7 @@ function OnboardingForm() {
                         <span className="text-[10px] font-extrabold text-[#ff922b] uppercase tracking-wider">Your Showcase URL Preview</span>
                         <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-600 truncate bg-neutral-50 p-2.5 rounded-lg border border-neutral-150">
                           <Globe className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                          <span className="truncate">http://localhost:3000/{username || "username"}</span>
+                          <span className="truncate">https://evident.krishanagopal.sbs/{username || "username"}</span>
                         </div>
                         
                         <div className="mt-2 text-[10px] text-neutral-400 font-medium flex items-center gap-1">
